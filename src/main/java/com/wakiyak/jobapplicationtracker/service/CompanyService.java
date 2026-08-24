@@ -1,5 +1,6 @@
 package com.wakiyak.jobapplicationtracker.service;
 
+import com.wakiyak.jobapplicationtracker.dtos.CompanyRequest;
 import com.wakiyak.jobapplicationtracker.dtos.CompanyResponse;
 import com.wakiyak.jobapplicationtracker.entity.Company;
 import com.wakiyak.jobapplicationtracker.repository.CompanyRepository;
@@ -22,10 +23,32 @@ public class CompanyService {
 
     private CompanyResponse mapToDto(Company company){
         return new CompanyResponse(company.getId(),
-                company.getCompanyName(), company.getWebsiteUrl(), company.getLocation());
+                company.getCompanyName(), company.getWebsiteUrl(), company.getLocation(), company.getCreatedAt(), company.getUpdatedAt());
     }
 
     public CompanyResponse getCompanyById(UUID id){
         return mapToDto(getCompanyByIdInternal(id));
+    }
+
+    public CompanyResponse addCompany(CompanyRequest requestDTO){
+        Company newCompany = new Company(requestDTO.companyName(), requestDTO.websiteUrl(), requestDTO.location());
+        Company savedCompany = companyRepository.save(newCompany);
+        return mapToDto(savedCompany);
+    }
+
+    public CompanyResponse editCompany(UUID id, CompanyRequest request){
+        Company companyToBeEdited = getCompanyByIdInternal(id);
+        companyToBeEdited.setCompanyName(request.companyName());
+        companyToBeEdited.setWebsiteUrl(request.websiteUrl());
+        companyToBeEdited.setLocation(request.location());
+
+        Company updatedCompany = companyRepository.save(companyToBeEdited);
+        return mapToDto(updatedCompany);
+    }
+
+    public void deleteCompany(UUID id){
+        if(!companyRepository.existsById(id)){
+            throw new IllegalArgumentException("Company with id: " + id + " does not exist.");
+        }
     }
 }
