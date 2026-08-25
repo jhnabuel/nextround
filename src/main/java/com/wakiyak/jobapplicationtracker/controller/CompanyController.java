@@ -31,8 +31,20 @@ public class CompanyController {
         return ResponseEntity.ok(companyService.getCompanyById(id));
     }
 
-    @GetMapping("/all")
     public ResponseEntity<List<CompanyResponse>> getAllCompanies(){
-        return ResponseEntity.ok(companyService.)
+        return ResponseEntity.ok(companyService.getAllCompanies());
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CompanyResponse> updateCompany(@PathVariable UUID id, @RequestBody CompanyRequest companyRequest){
+        CompanyResponse updatedCompany = companyService.editCompany(id, companyRequest);
+        return ResponseEntity.ok(updatedCompany);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCompany(@PathVariable UUID id){
+        companyService.deleteCompany(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
