@@ -27,7 +27,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
     private String location;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -7,7 +7,9 @@ import com.wakiyak.jobapplicationtracker.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
 
 import java.rmi.server.UID;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CompanyService {
@@ -28,6 +30,10 @@ public class CompanyService {
 
     public CompanyResponse getCompanyById(UUID id){
         return mapToDto(getCompanyByIdInternal(id));
+    }
+
+    public List<CompanyResponse> getAllCompanies(){
+        return companyRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
     public CompanyResponse addCompany(CompanyRequest requestDTO){
