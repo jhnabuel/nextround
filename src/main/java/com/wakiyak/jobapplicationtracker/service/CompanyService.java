@@ -50,5 +50,6 @@ public class CompanyService {
         if(!companyRepository.existsById(id)){
             throw new IllegalArgumentException("Company with id: " + id + " does not exist.");
         }
+        companyRepository.deleteById(id);
     }
 }
