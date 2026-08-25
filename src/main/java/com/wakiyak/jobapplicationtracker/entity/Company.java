@@ -25,6 +25,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
     private String websiteUrl;
 
+    private String industry;
+
     private String location;
 
     @Column(nullable = false, updatable = false)
@@ -37,9 +39,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 
     protected Company(){}
 
-    public Company(String companyName, String websiteUrl, String location){
+    public Company(String companyName, String websiteUrl, String industry, String location){
         this.companyName = companyName;
         this.websiteUrl = websiteUrl;
+        this.industry = industry;
         this.location = location;
     }
 

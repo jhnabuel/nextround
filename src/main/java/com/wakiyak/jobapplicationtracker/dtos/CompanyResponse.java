@@ -7,6 +7,7 @@ import java.util.UUID;
 public record CompanyResponse(UUID id,
                               String companyName,
                               String websiteUrl,
+                              String industry,
                               String location,
                               LocalDateTime createdAt,
                               LocalDateTime updatedAt) {

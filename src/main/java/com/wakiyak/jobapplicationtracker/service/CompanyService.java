@@ -25,7 +25,7 @@ public class CompanyService {
 
     private CompanyResponse mapToDto(Company company){
         return new CompanyResponse(company.getId(),
-                company.getCompanyName(), company.getWebsiteUrl(), company.getLocation(), company.getCreatedAt(), company.getUpdatedAt());
+                company.getCompanyName(), company.getWebsiteUrl(), company.getIndustry(), company.getLocation(), company.getCreatedAt(), company.getUpdatedAt());
     }
 
     public CompanyResponse getCompanyById(UUID id){
@@ -37,7 +37,7 @@ public class CompanyService {
     }
 
     public CompanyResponse addCompany(CompanyRequest requestDTO){
-        Company newCompany = new Company(requestDTO.companyName(), requestDTO.websiteUrl(), requestDTO.location());
+        Company newCompany = new Company(requestDTO.companyName(), requestDTO.websiteUrl(), requestDTO.industry(), requestDTO.location());
         Company savedCompany = companyRepository.save(newCompany);
         return mapToDto(savedCompany);
     }
@@ -46,6 +46,7 @@ public class CompanyService {
         Company companyToBeEdited = getCompanyByIdInternal(id);
         companyToBeEdited.setCompanyName(request.companyName());
         companyToBeEdited.setWebsiteUrl(request.websiteUrl());
+        companyToBeEdited.setIndustry(request.industry());
         companyToBeEdited.setLocation(request.location());
 
         Company updatedCompany = companyRepository.save(companyToBeEdited);
