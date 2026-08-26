@@ -1,4 +1,4 @@
-package com.wakiyak.jobapplicationtracker.entity;
+package com.nextround.nextroundapi.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

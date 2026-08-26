@@ -1,4 +1,4 @@
-package com.wakiyak.jobapplicationtracker.dtos;
+package com.nextround.nextroundapi.dtos;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

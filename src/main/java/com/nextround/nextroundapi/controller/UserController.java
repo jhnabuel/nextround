@@ -1,8 +1,8 @@
-package com.wakiyak.jobapplicationtracker.controller;
+package com.nextround.nextroundapi.controller;
 
-import com.wakiyak.jobapplicationtracker.dtos.UserRequest;
-import com.wakiyak.jobapplicationtracker.dtos.UserResponse;
-import com.wakiyak.jobapplicationtracker.service.UserService;
+import com.nextround.nextroundapi.dtos.UserRequest;
+import com.nextround.nextroundapi.dtos.UserResponse;
+import com.nextround.nextroundapi.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

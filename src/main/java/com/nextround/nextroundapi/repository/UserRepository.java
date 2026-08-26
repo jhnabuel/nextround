@@ -1,6 +1,6 @@
-package com.wakiyak.jobapplicationtracker.repository;
+package com.nextround.nextroundapi.repository;
 
-import com.wakiyak.jobapplicationtracker.entity.User;
+import com.nextround.nextroundapi.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

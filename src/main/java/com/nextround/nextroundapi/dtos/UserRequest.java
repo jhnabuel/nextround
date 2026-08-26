@@ -1,4 +1,4 @@
-package com.wakiyak.jobapplicationtracker.dtos;
+package com.nextround.nextroundapi.dtos;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

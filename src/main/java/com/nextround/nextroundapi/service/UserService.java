@@ -1,13 +1,11 @@
-package com.wakiyak.jobapplicationtracker.service;
+package com.nextround.nextroundapi.service;
 
-import com.wakiyak.jobapplicationtracker.dtos.UserRequest;
-import com.wakiyak.jobapplicationtracker.dtos.UserResponse;
-import com.wakiyak.jobapplicationtracker.entity.Company;
-import com.wakiyak.jobapplicationtracker.entity.User;
-import com.wakiyak.jobapplicationtracker.repository.UserRepository;
+import com.nextround.nextroundapi.dtos.UserRequest;
+import com.nextround.nextroundapi.dtos.UserResponse;
+import com.nextround.nextroundapi.entity.User;
+import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;

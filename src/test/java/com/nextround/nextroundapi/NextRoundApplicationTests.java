@@ -1,13 +1,11 @@
-package com.wakiyak.jobapplicationtracker;
+package com.nextround.nextroundapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class JobApplicationTrackerApplicationTests {
-
+class NextRoundApplicationTests {
     @Test
     void contextLoads() {
     }
-
 }

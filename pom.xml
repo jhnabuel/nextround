@@ -8,10 +8,10 @@
         <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.wakiyak</groupId>
-    <artifactId>JobApplicationTracker</artifactId>
+    <groupId>com.nextround</groupId>
+    <artifactId>nextroundapi</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>JobApplicationTracker</name>
+    <name>NextRound</name>
     <description>JobApplicationTracker</description>
     <url/>
     <licenses>
