@@ -31,12 +31,13 @@ public class CompanyController {
         return ResponseEntity.ok(companyService.getCompanyById(id));
     }
 
+    @GetMapping
     public ResponseEntity<List<CompanyResponse>> getAllCompanies(){
         return ResponseEntity.ok(companyService.getAllCompanies());
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<CompanyResponse> updateCompany(@PathVariable UUID id, @RequestBody CompanyRequest companyRequest){
+    public ResponseEntity<CompanyResponse> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyRequest companyRequest){
         CompanyResponse updatedCompany = companyService.editCompany(id, companyRequest);
         return ResponseEntity.ok(updatedCompany);
     }

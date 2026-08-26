@@ -28,7 +28,7 @@ public class UserService {
         return new UserResponse(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(), user.getCreatedAt(), user.getUpdatedAt());
     }
 
-    private UserResponse getUserById(UUID id){
+    public UserResponse getUserById(UUID id){
         return mapToDto(getUserByIdInternal(id));
     }
 
