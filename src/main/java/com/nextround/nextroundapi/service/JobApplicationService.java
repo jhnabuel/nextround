@@ -59,4 +59,9 @@ public class JobApplicationService {
         return jobApplicationRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Job application with id: " + id + " does not exist."));
     }
 
+    public  JobApplicationResponse getJobApplicationById(UUID id){
+        return mapToDto(getJobApplicationIdInternal(id));
+    }
+
+    public JobApplicationResponse createJobApplication(JobApplication )
 }
