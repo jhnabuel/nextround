@@ -2,20 +2,29 @@ package com.nextround.nextroundapi.service;
 
 
 import com.nextround.nextroundapi.dtos.CompanyResponse;
+import com.nextround.nextroundapi.dtos.JobApplicationRequest;
 import com.nextround.nextroundapi.dtos.JobApplicationResponse;
 import com.nextround.nextroundapi.dtos.UserResponse;
+import com.nextround.nextroundapi.entity.Company;
 import com.nextround.nextroundapi.entity.JobApplication;
+import com.nextround.nextroundapi.entity.User;
+import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
+import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 public class JobApplicationService {
-    private JobApplicationRepository jobApplicationRepository;
+    private final JobApplicationRepository jobApplicationRepository;
+    private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
 
-    JobApplicationService(JobApplicationRepository jobApplicationRepository){
+    JobApplicationService(JobApplicationRepository jobApplicationRepository, UserRepository userRepository, CompanyRepository companyRepository){
         this.jobApplicationRepository = jobApplicationRepository;
+        this.userRepository = userRepository;
+        this.companyRepository = companyRepository;
     }
 
     private JobApplicationResponse mapToDto(JobApplication jobApplication){
@@ -63,5 +72,21 @@ public class JobApplicationService {
         return mapToDto(getJobApplicationIdInternal(id));
     }
 
-    public JobApplicationResponse createJobApplication(JobApplication )
+    public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
+        User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new IllegalArgumentException("User not found."));
+        Company company = companyRepository.findById(jobApplicationRequest.companyID()).orElseThrow(() -> new IllegalArgumentException("Company not found."));
+        JobApplication newJobApplication = new JobApplication(user,
+                company,
+                jobApplicationRequest.jobTitle(),
+                jobApplicationRequest.jobURL(),
+                jobApplicationRequest.applicationStatus(),
+                jobApplicationRequest.workLocation(),
+                jobApplicationRequest.salaryMin(),
+                jobApplicationRequest.salaryMax(),
+                jobApplicationRequest.currency(),
+                jobApplicationRequest.appliedDate());
+
+        JobApplication addJobApplication = jobApplicationRepository.save(newJobApplication);
+        return mapToDto(addJobApplication);
+    }
 }

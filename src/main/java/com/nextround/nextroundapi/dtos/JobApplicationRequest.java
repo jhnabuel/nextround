@@ -16,7 +16,7 @@ public record JobApplicationRequest(
         UUID userId,
 
         @NotNull(message = "Company ID is required")
-        UUID companyId,
+        UUID companyID,
 
         @NotBlank(message = "Job title is required")
         @Size(max = 100, message = "Job title cannot exceed 100 characters")
