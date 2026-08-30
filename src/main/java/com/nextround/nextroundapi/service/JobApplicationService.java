@@ -55,7 +55,7 @@ public class JobApplicationService {
                 userResponse,
                 companyResponse,
                 jobApplication.getJobTitle(),
-                jobApplication.getJobURL(),
+                jobApplication.getJobUrl(),
                 jobApplication.getStatus(),
                 jobApplication.getWorkLocation(),
                 jobApplication.getSalaryMin(),
@@ -80,7 +80,7 @@ public class JobApplicationService {
         JobApplication newJobApplication = new JobApplication(user,
                 company,
                 jobApplicationRequest.jobTitle(),
-                jobApplicationRequest.jobURL(),
+                jobApplicationRequest.jobUrl(),
                 jobApplicationRequest.applicationStatus(),
                 jobApplicationRequest.workLocation(),
                 jobApplicationRequest.salaryMin(),
@@ -104,7 +104,7 @@ public class JobApplicationService {
         jobApplicationToBeEdited.setUser(user);
         jobApplicationToBeEdited.setCompany(company);
         jobApplicationToBeEdited.setJobTitle(jobApplicationRequest.jobTitle());
-        jobApplicationToBeEdited.setJobURL(jobApplicationRequest.jobURL());
+        jobApplicationToBeEdited.setJobUrl(jobApplicationRequest.jobUrl());
         jobApplicationToBeEdited.setStatus(jobApplicationRequest.applicationStatus());
         jobApplicationToBeEdited.setWorkLocation(jobApplicationRequest.workLocation());
         jobApplicationToBeEdited.setSalaryMin(jobApplicationRequest.salaryMin());

@@ -13,7 +13,7 @@ import java.util.UUID;
 public record JobApplicationResponse(UUID id, UserResponse user,
                                      CompanyResponse company,
                                      String jobTitle,
-                                     String jobURL,
+                                     String jobUrl,
                                      ApplicationStatus applicationStatus,
                                      WorkLocationType workLocation,
                                      BigDecimal salaryMin,

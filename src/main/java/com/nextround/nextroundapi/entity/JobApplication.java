@@ -37,7 +37,7 @@ public class JobApplication {
     private String jobTitle;
 
     @Column(length = 500)
-    private String jobURL;
+    private String jobUrl;
 
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status = ApplicationStatus.APPLIED;
@@ -69,7 +69,7 @@ public class JobApplication {
             User user,
             Company company,
             String jobTitle,
-                   String jobURL,
+                   String jobUrl,
                    ApplicationStatus status,
                    WorkLocationType workLocation,
                    BigDecimal salaryMin,
@@ -77,7 +77,7 @@ public class JobApplication {
             this.user = user;
             this.company = company;
             this.jobTitle = jobTitle;
-            this.jobURL = jobURL;
+            this.jobUrl = jobUrl;
             this.status = status != null ? status: ApplicationStatus.APPLIED;
             this.workLocation = workLocation != null ? workLocation: WorkLocationType.ON_SITE;
             this.salaryMin = salaryMin;

@@ -24,7 +24,7 @@ public record JobApplicationRequest(
 
         @URL(message = "Job URL must be a valid URL")
         @Size(max = 500, message = "Job URL cannot exceed 500 characters")
-        String jobURL,
+        String jobUrl,
 
         ApplicationStatus applicationStatus,
 
