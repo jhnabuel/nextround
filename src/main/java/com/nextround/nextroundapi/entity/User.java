@@ -2,6 +2,7 @@ package com.nextround.nextroundapi.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
+@NoArgsConstructor
 @Table(name = "users")
 public class User {
 
