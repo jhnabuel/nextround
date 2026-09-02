@@ -8,6 +8,7 @@ import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.Company;
 import com.nextround.nextroundapi.entity.JobApplication;
 import com.nextround.nextroundapi.entity.User;
+import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
@@ -67,7 +68,7 @@ public class JobApplicationService {
     }
 
     private JobApplication getJobApplicationByIdInternal(UUID id){
-        return jobApplicationRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Job application with id: " + id + " does not exist."));
+        return jobApplicationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Job Application not found."));
     }
 
     public  JobApplicationResponse getJobApplicationById(UUID id){
@@ -76,7 +77,7 @@ public class JobApplicationService {
 
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
         User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new IllegalArgumentException("User not found."));
-        Company company = companyRepository.findById(jobApplicationRequest.companyID()).orElseThrow(() -> new IllegalArgumentException("Company not found."));
+        Company company = companyRepository.findById(jobApplicationRequest.companyId()).orElseThrow(() -> new IllegalArgumentException("Company not found."));
         JobApplication newJobApplication = new JobApplication(user,
                 company,
                 jobApplicationRequest.jobTitle(),
@@ -98,7 +99,7 @@ public class JobApplicationService {
 
         User user = userRepository.findById(jobApplicationRequest.userId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-        Company company = companyRepository.findById(jobApplicationRequest.companyID())
+        Company company = companyRepository.findById(jobApplicationRequest.companyId())
                 .orElseThrow(() -> new IllegalArgumentException("Company not found."));
 
         jobApplicationToBeEdited.setUser(user);
@@ -118,7 +119,7 @@ public class JobApplicationService {
 
     public void deleteJobApplication(UUID id){
         if(!jobApplicationRepository.existsById(id)){
-            throw new IllegalArgumentException("Job application with id: " + id + " does not exist.");
+            throw new ResourceNotFoundException("Job application does not exist.");
         }
         jobApplicationRepository.deleteById(id);
     }

@@ -3,6 +3,7 @@ package com.nextround.nextroundapi.service;
 import com.nextround.nextroundapi.dtos.CompanyRequest;
 import com.nextround.nextroundapi.dtos.CompanyResponse;
 import com.nextround.nextroundapi.entity.Company;
+import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class CompanyService {
     }
 
     private Company getCompanyByIdInternal(UUID id){
-        return companyRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Company with id: " + id + " does not exist."));
+        return companyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Company with id: " + id + " does not exist."));
     }
 
     private CompanyResponse mapToDto(Company company){
@@ -54,7 +55,7 @@ public class CompanyService {
 
     public void deleteCompany(UUID id){
         if(!companyRepository.existsById(id)){
-            throw new IllegalArgumentException("Company with id: " + id + " does not exist.");
+            throw new ResourceNotFoundException("Company does not exist.");
         }
         companyRepository.deleteById(id);
     }

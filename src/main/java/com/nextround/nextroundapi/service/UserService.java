@@ -3,6 +3,7 @@ package com.nextround.nextroundapi.service;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
+import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class UserService {
     }
 
     private User getUserByIdInternal(UUID id){
-        return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Account not found with id: " + id));
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + id));
     }
 
     private UserResponse mapToDto(User user){
@@ -53,7 +54,7 @@ public class UserService {
 
     public void deleteUser(UUID id){
         if(!userRepository.existsById(id)){
-            throw new IllegalArgumentException("User with id: " + id + " does not exist.");
+            throw new ResourceNotFoundException("User not found.");
         }
         userRepository.deleteById(id);
     }
