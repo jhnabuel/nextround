@@ -4,6 +4,7 @@ import com.nextround.nextroundapi.dtos.CompanyRequest;
 import com.nextround.nextroundapi.dtos.CompanyResponse;
 import com.nextround.nextroundapi.entity.Company;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
+import com.nextround.nextroundapi.mapper.CompanyMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
 
@@ -23,23 +24,18 @@ public class CompanyService {
         return companyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Company with id: " + id + " does not exist."));
     }
 
-    private CompanyResponse mapToDto(Company company){
-        return new CompanyResponse(company.getId(),
-                company.getCompanyName(), company.getWebsiteUrl(), company.getIndustry(), company.getLocation(), company.getCreatedAt(), company.getUpdatedAt());
-    }
-
     public CompanyResponse getCompanyById(UUID id){
-        return mapToDto(getCompanyByIdInternal(id));
+        return CompanyMapper.toDto(getCompanyByIdInternal(id));
     }
 
     public List<CompanyResponse> getAllCompanies(){
-        return companyRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+        return companyRepository.findAll().stream().map(CompanyMapper::toDto).collect(Collectors.toList());
     }
 
     public CompanyResponse addCompany(CompanyRequest requestDTO){
         Company newCompany = new Company(requestDTO.companyName(), requestDTO.websiteUrl(), requestDTO.industry(), requestDTO.location());
         Company savedCompany = companyRepository.save(newCompany);
-        return mapToDto(savedCompany);
+        return CompanyMapper.toDto(savedCompany);
     }
 
     public CompanyResponse editCompany(UUID id, CompanyRequest request){
@@ -50,7 +46,7 @@ public class CompanyService {
         companyToBeEdited.setLocation(request.location());
 
         Company updatedCompany = companyRepository.save(companyToBeEdited);
-        return mapToDto(updatedCompany);
+        return CompanyMapper.toDto(updatedCompany);
     }
 
     public void deleteCompany(UUID id){

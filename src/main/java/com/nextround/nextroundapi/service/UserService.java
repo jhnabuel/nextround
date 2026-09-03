@@ -6,6 +6,8 @@ import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.nextround.nextroundapi.mapper.UserMapper;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -23,22 +25,18 @@ public class UserService {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + id));
     }
 
-    private UserResponse mapToDto(User user){
-        return new UserResponse(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(), user.getCreatedAt(), user.getUpdatedAt());
-    }
-
     public UserResponse getUserById(UUID id){
-        return mapToDto(getUserByIdInternal(id));
+        return UserMapper.toDto(getUserByIdInternal(id));
     }
 
     public List<UserResponse> getAllUsers(){
-        return userRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+        return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
     }
 
     public UserResponse createUser(UserRequest userRequest){
         User newUser = new User(userRequest.email(), userRequest.passwordHash(), userRequest.firstName(), userRequest.lastName());
         User savedUser = userRepository.save(newUser);
-        return mapToDto(savedUser);
+        return UserMapper.toDto(savedUser);
     }
 
     public UserResponse editUser(UUID id, UserRequest userRequest){
@@ -49,7 +47,7 @@ public class UserService {
         userToBeEdited.setLastName(userRequest.lastName());
 
         User updatedUser = userRepository.save(userToBeEdited);
-        return mapToDto(updatedUser);
+        return UserMapper.toDto(updatedUser);
     }
 
     public void deleteUser(UUID id){

@@ -9,6 +9,7 @@ import com.nextround.nextroundapi.entity.Company;
 import com.nextround.nextroundapi.entity.JobApplication;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
+import com.nextround.nextroundapi.mapper.JobApplicationMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
@@ -30,54 +31,18 @@ public class JobApplicationService {
         this.companyRepository = companyRepository;
     }
 
-    private JobApplicationResponse mapToDto(JobApplication jobApplication){
-        UserResponse userResponse = new UserResponse(
-                jobApplication.getUser().getId(),
-                jobApplication.getUser().getEmail(),
-                jobApplication.getUser().getFirstName(),
-                jobApplication.getUser().getLastName(),
-                jobApplication.getUser().getCreatedAt(),
-                jobApplication.getUser().getUpdatedAt()
-        );
-
-        CompanyResponse companyResponse = new CompanyResponse(
-                jobApplication.getCompany().getId(),
-                jobApplication.getCompany().getCompanyName(),
-                jobApplication.getCompany().getWebsiteUrl(),
-                jobApplication.getCompany().getIndustry(),
-                jobApplication.getCompany().getLocation(),
-                jobApplication.getCompany().getCreatedAt(),
-                jobApplication.getCompany().getUpdatedAt()
-        );
-
-
-
-        return new JobApplicationResponse(jobApplication.getId(),
-                userResponse,
-                companyResponse,
-                jobApplication.getJobTitle(),
-                jobApplication.getJobUrl(),
-                jobApplication.getStatus(),
-                jobApplication.getWorkLocation(),
-                jobApplication.getSalaryMin(),
-                jobApplication.getSalaryMax(),
-                jobApplication.getCurrency(),
-                jobApplication.getAppliedDate(),
-                jobApplication.getCreatedAt(),
-                jobApplication.getUpdatedAt());
-    }
 
     private JobApplication getJobApplicationByIdInternal(UUID id){
         return jobApplicationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Job Application not found."));
     }
 
     public  JobApplicationResponse getJobApplicationById(UUID id){
-        return mapToDto(getJobApplicationByIdInternal(id));
+        return JobApplicationMapper.toDto(getJobApplicationByIdInternal(id));
     }
 
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
-        User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new IllegalArgumentException("User not found."));
-        Company company = companyRepository.findById(jobApplicationRequest.companyId()).orElseThrow(() -> new IllegalArgumentException("Company not found."));
+        User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        Company company = companyRepository.findById(jobApplicationRequest.companyId()).orElseThrow(() -> new ResourceNotFoundException("Company not found."));
         JobApplication newJobApplication = new JobApplication(user,
                 company,
                 jobApplicationRequest.jobTitle(),
@@ -90,7 +55,7 @@ public class JobApplicationService {
                 jobApplicationRequest.appliedDate());
 
         JobApplication addJobApplication = jobApplicationRepository.save(newJobApplication);
-        return mapToDto(addJobApplication);
+        return JobApplicationMapper.toDto(addJobApplication);
     }
 
 
@@ -98,9 +63,9 @@ public class JobApplicationService {
         JobApplication jobApplicationToBeEdited = getJobApplicationByIdInternal(id);
 
         User user = userRepository.findById(jobApplicationRequest.userId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Company company = companyRepository.findById(jobApplicationRequest.companyId())
-                .orElseThrow(() -> new IllegalArgumentException("Company not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found."));
 
         jobApplicationToBeEdited.setUser(user);
         jobApplicationToBeEdited.setCompany(company);
@@ -114,7 +79,7 @@ public class JobApplicationService {
         jobApplicationToBeEdited.setAppliedDate(jobApplicationRequest.appliedDate());
 
         JobApplication updatedJobApplication = jobApplicationRepository.save(jobApplicationToBeEdited);
-        return mapToDto(updatedJobApplication);
+        return JobApplicationMapper.toDto(updatedJobApplication);
     }
 
     public void deleteJobApplication(UUID id){
@@ -125,7 +90,7 @@ public class JobApplicationService {
     }
 
     public List<JobApplicationResponse> getAllJobApplications(){
-        return jobApplicationRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+        return jobApplicationRepository.findAll().stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
     }
 
 }
