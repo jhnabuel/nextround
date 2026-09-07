@@ -13,6 +13,7 @@ import com.nextround.nextroundapi.mapper.JobApplicationMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class JobApplicationService {
     private final JobApplicationRepository jobApplicationRepository;
     private final UserRepository userRepository;
@@ -36,6 +38,7 @@ public class JobApplicationService {
         return jobApplicationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Job Application not found."));
     }
 
+    @Transactional(readOnly = true)
     public  JobApplicationResponse getJobApplicationById(UUID id){
         return JobApplicationMapper.toDto(getJobApplicationByIdInternal(id));
     }
@@ -89,6 +92,8 @@ public class JobApplicationService {
         jobApplicationRepository.deleteById(id);
     }
 
+
+    @Transactional(readOnly = true)
     public List<JobApplicationResponse> getAllJobApplications(){
         return jobApplicationRepository.findAll().stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
     }
