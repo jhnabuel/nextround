@@ -7,12 +7,14 @@ import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.mapper.CompanyMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class CompanyService {
     private final CompanyRepository companyRepository;
 
@@ -24,10 +26,12 @@ public class CompanyService {
         return companyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Company with id: " + id + " does not exist."));
     }
 
+    @Transactional(readOnly = true)
     public CompanyResponse getCompanyById(UUID id){
         return CompanyMapper.toDto(getCompanyByIdInternal(id));
     }
 
+    @Transactional(readOnly = true)
     public List<CompanyResponse> getAllCompanies(){
         return companyRepository.findAll().stream().map(CompanyMapper::toDto).collect(Collectors.toList());
     }
