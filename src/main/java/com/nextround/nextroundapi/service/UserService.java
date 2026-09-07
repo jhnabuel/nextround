@@ -7,6 +7,7 @@ import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import com.nextround.nextroundapi.mapper.UserMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class UserService {
     private final UserRepository userRepository;
 
@@ -25,10 +27,12 @@ public class UserService {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + id));
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getUserById(UUID id){
         return UserMapper.toDto(getUserByIdInternal(id));
     }
 
+    @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers(){
         return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
     }
