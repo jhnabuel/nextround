@@ -43,6 +43,11 @@ public class JobApplicationService {
         return JobApplicationMapper.toDto(getJobApplicationByIdInternal(id));
     }
 
+    @Transactional(readOnly = true)
+    public List<JobApplicationResponse> getApplicationByUserId(UUID userId){
+        return jobApplicationRepository.findByUserId(userId).stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
+    }
+
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
         User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Company company = companyRepository.findById(jobApplicationRequest.companyId()).orElseThrow(() -> new ResourceNotFoundException("Company not found."));

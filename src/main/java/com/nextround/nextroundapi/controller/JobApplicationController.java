@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/applications")
+@RequestMapping("/api/v1/applications")
 public class JobApplicationController {
     private final JobApplicationService jobApplicationService;
 
@@ -35,6 +35,11 @@ public class JobApplicationController {
     @GetMapping
     public ResponseEntity<List<JobApplicationResponse>> getAllJobApplications(){
         return ResponseEntity.ok(jobApplicationService.getAllJobApplications());
+    }
+
+    @GetMapping("/{id}/applications")
+    public ResponseEntity<List<JobApplicationResponse>> getApplicationsByUser(@PathVariable UUID id){
+        return ResponseEntity.ok(jobApplicationService.getApplicationByUserId(id));
     }
 
     @PutMapping("/{id}")
