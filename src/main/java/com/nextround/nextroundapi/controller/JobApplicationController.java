@@ -3,6 +3,7 @@ package com.nextround.nextroundapi.controller;
 
 import com.nextround.nextroundapi.dtos.JobApplicationRequest;
 import com.nextround.nextroundapi.dtos.JobApplicationResponse;
+import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.service.JobApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -33,9 +34,13 @@ public class JobApplicationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JobApplicationResponse>> getAllJobApplications(){
+    public ResponseEntity<List<JobApplicationResponse>> getAllJobApplications(@RequestParam(required = false)ApplicationStatus status){
+        if (status != null){
+            return ResponseEntity.ok(jobApplicationService.getApplicationsByStatus(status));
+        }
         return ResponseEntity.ok(jobApplicationService.getAllJobApplications());
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<JobApplicationResponse> updateJobApplication(@PathVariable UUID id,

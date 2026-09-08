@@ -8,6 +8,7 @@ import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.Company;
 import com.nextround.nextroundapi.entity.JobApplication;
 import com.nextround.nextroundapi.entity.User;
+import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.mapper.JobApplicationMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
@@ -52,6 +53,12 @@ public class JobApplicationService {
     public List<JobApplicationResponse> getApplicationsByCompanyId(UUID companyId){
         return jobApplicationRepository.findByCompanyId(companyId).stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<JobApplicationResponse> getApplicationsByStatus(ApplicationStatus status){
+        return jobApplicationRepository.findByStatus(status).stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
+    }
+
 
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
         User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
