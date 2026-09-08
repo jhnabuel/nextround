@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface JobApplicationRepository extends JpaRepository<JobApplication, UUID> {
 
     List<JobApplication> findByUserId(UUID userId);
+    List<JobApplication> findByCompanyId(UUID companyId);
+
 }

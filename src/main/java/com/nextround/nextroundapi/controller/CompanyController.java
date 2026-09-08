@@ -2,7 +2,9 @@ package com.nextround.nextroundapi.controller;
 
 import com.nextround.nextroundapi.dtos.CompanyRequest;
 import com.nextround.nextroundapi.dtos.CompanyResponse;
+import com.nextround.nextroundapi.dtos.JobApplicationResponse;
 import com.nextround.nextroundapi.service.CompanyService;
+import com.nextround.nextroundapi.service.JobApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,11 @@ import java.util.UUID;
 @RequestMapping("api/v1/companies")
 public class CompanyController {
     private final CompanyService companyService;
+    private final JobApplicationService jobApplicationService;
 
-    CompanyController(CompanyService companyService){
+    CompanyController(CompanyService companyService, JobApplicationService jobApplicationService){
         this.companyService = companyService;
+        this.jobApplicationService = jobApplicationService;
     }
 
     @PostMapping
@@ -34,6 +38,11 @@ public class CompanyController {
     @GetMapping
     public ResponseEntity<List<CompanyResponse>> getAllCompanies(){
         return ResponseEntity.ok(companyService.getAllCompanies());
+    }
+
+    @GetMapping("/{id}/applications")
+    public ResponseEntity<List<JobApplicationResponse>> getApplicationsByCompany(@PathVariable UUID id){
+        return ResponseEntity.ok(jobApplicationService.getApplicationsByCompanyId(id));
     }
 
     @PatchMapping("/{id}")
