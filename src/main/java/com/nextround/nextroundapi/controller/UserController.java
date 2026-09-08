@@ -1,7 +1,9 @@
 package com.nextround.nextroundapi.controller;
 
+import com.nextround.nextroundapi.dtos.JobApplicationResponse;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
+import com.nextround.nextroundapi.service.JobApplicationService;
 import com.nextround.nextroundapi.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,9 +17,11 @@ import java.util.UUID;
 @RequestMapping("api/v1/users")
 public class UserController {
     private final UserService userService;
+    private final JobApplicationService jobApplicationService;
 
-    UserController(UserService userService){
+    UserController(UserService userService, JobApplicationService jobApplicationService){
         this.userService = userService;
+        this.jobApplicationService = jobApplicationService;
     }
 
     @PostMapping
@@ -34,6 +38,11 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @GetMapping("/{id}/applications")
+    public ResponseEntity<List<JobApplicationResponse>> getApplicationsByUser(@PathVariable UUID id){
+        return ResponseEntity.ok(jobApplicationService.getApplicationByUserId(id));
     }
 
     @PatchMapping("/{id}")

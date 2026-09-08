@@ -37,11 +37,6 @@ public class JobApplicationController {
         return ResponseEntity.ok(jobApplicationService.getAllJobApplications());
     }
 
-    @GetMapping("/{id}/applications")
-    public ResponseEntity<List<JobApplicationResponse>> getApplicationsByUser(@PathVariable UUID id){
-        return ResponseEntity.ok(jobApplicationService.getApplicationByUserId(id));
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<JobApplicationResponse> updateJobApplication(@PathVariable UUID id,
                                                                        @Valid @RequestBody JobApplicationRequest jobApplicationRequest){
