@@ -35,7 +35,7 @@ public class CompanyService {
 
     @Transactional(readOnly = true)
     public Page<CompanyResponse> getAllCompanies(Pageable pageable){
-        return companyRepository.findAll(pageable).stream().map(CompanyMapper::toDto);
+        return companyRepository.findAll(pageable).map(CompanyMapper::toDto);
     }
 
     public CompanyResponse addCompany(CompanyRequest requestDTO){
