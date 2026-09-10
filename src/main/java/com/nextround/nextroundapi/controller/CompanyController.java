@@ -6,6 +6,8 @@ import com.nextround.nextroundapi.dtos.JobApplicationResponse;
 import com.nextround.nextroundapi.service.CompanyService;
 import com.nextround.nextroundapi.service.JobApplicationService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +38,8 @@ public class CompanyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CompanyResponse>> getAllCompanies(){
-        return ResponseEntity.ok(companyService.getAllCompanies());
+    public ResponseEntity<Page<CompanyResponse>> getAllCompanies(Pageable pageable){
+        return ResponseEntity.ok(companyService.getAllCompanies(pageable));
     }
 
     @GetMapping("/{id}/applications")

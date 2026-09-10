@@ -6,6 +6,8 @@ import com.nextround.nextroundapi.entity.Company;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.mapper.CompanyMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +34,8 @@ public class CompanyService {
     }
 
     @Transactional(readOnly = true)
-    public List<CompanyResponse> getAllCompanies(){
-        return companyRepository.findAll().stream().map(CompanyMapper::toDto).collect(Collectors.toList());
+    public Page<CompanyResponse> getAllCompanies(Pageable pageable){
+        return companyRepository.findAll(pageable).stream().map(CompanyMapper::toDto);
     }
 
     public CompanyResponse addCompany(CompanyRequest requestDTO){
