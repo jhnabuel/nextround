@@ -14,6 +14,8 @@ import com.nextround.nextroundapi.mapper.JobApplicationMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -55,10 +57,14 @@ public class JobApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<JobApplicationResponse> getApplicationsByStatus(ApplicationStatus status){
-        return jobApplicationRepository.findByStatus(status).stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
+    public Page<JobApplicationResponse> getApplicationsByStatus(ApplicationStatus status, Pageable pageable){
+        return jobApplicationRepository.findByStatus(status, pageable).map(JobApplicationMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<JobApplicationResponse> getAllJobApplications(Pageable pageable){
+        return jobApplicationRepository.findAll(pageable).map(JobApplicationMapper::toDto);
+    }
 
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
         User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
@@ -110,9 +116,6 @@ public class JobApplicationService {
     }
 
 
-    @Transactional(readOnly = true)
-    public List<JobApplicationResponse> getAllJobApplications(){
-        return jobApplicationRepository.findAll().stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
-    }
+
 
 }

@@ -2,6 +2,8 @@ package com.nextround.nextroundapi.repository;
 
 import com.nextround.nextroundapi.entity.JobApplication;
 import com.nextround.nextroundapi.enums.ApplicationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,5 +13,5 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     List<JobApplication> findByUserId(UUID userId);
     List<JobApplication> findByCompanyId(UUID companyId);
-    List<JobApplication> findByStatus(ApplicationStatus status);
+    Page<JobApplication> findByStatus(ApplicationStatus status, Pageable pageable);
 }
