@@ -43,8 +43,8 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}/applications")
-    public ResponseEntity<List<JobApplicationResponse>> getApplicationsByCompany(@PathVariable UUID id){
-        return ResponseEntity.ok(jobApplicationService.getApplicationsByCompanyId(id));
+    public ResponseEntity<Page<JobApplicationResponse>> getApplicationsByCompany(@PathVariable UUID id, Pageable pageable){
+        return ResponseEntity.ok(jobApplicationService.getApplicationsByCompanyId(id, pageable));
     }
 
     @PatchMapping("/{id}")

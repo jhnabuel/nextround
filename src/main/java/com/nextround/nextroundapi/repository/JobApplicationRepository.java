@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface JobApplicationRepository extends JpaRepository<JobApplication, UUID> {
 
-    List<JobApplication> findByUserId(UUID userId);
-    List<JobApplication> findByCompanyId(UUID companyId);
+    Page<JobApplication> findByUserId(UUID userId, Pageable pageable);
+    Page<JobApplication> findByCompanyId(UUID companyId, Pageable pageable);
     Page<JobApplication> findByStatus(ApplicationStatus status, Pageable pageable);
 }

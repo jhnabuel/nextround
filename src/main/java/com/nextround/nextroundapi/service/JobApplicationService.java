@@ -47,13 +47,13 @@ public class JobApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<JobApplicationResponse> getApplicationByUserId(UUID userId){
-        return jobApplicationRepository.findByUserId(userId).stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
+    public Page<JobApplicationResponse> getApplicationByUserId(UUID userId, Pageable pageable){
+        return jobApplicationRepository.findByUserId(userId, pageable).map(JobApplicationMapper::toDto);
     }
 
     @Transactional(readOnly = true)
-    public List<JobApplicationResponse> getApplicationsByCompanyId(UUID companyId){
-        return jobApplicationRepository.findByCompanyId(companyId).stream().map(JobApplicationMapper::toDto).collect(Collectors.toList());
+    public Page<JobApplicationResponse> getApplicationsByCompanyId(UUID companyId, Pageable pageable){
+        return jobApplicationRepository.findByCompanyId(companyId, pageable).map(JobApplicationMapper::toDto);
     }
 
     @Transactional(readOnly = true)

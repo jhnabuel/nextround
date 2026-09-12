@@ -6,6 +6,8 @@ import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.service.JobApplicationService;
 import com.nextround.nextroundapi.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,8 +43,8 @@ public class UserController {
     }
 
     @GetMapping("/{id}/applications")
-    public ResponseEntity<List<JobApplicationResponse>> getApplicationsByUser(@PathVariable UUID id){
-        return ResponseEntity.ok(jobApplicationService.getApplicationByUserId(id));
+    public ResponseEntity<Page<JobApplicationResponse>> getApplicationsByUser(@PathVariable UUID id, Pageable pageable){
+        return ResponseEntity.ok(jobApplicationService.getApplicationByUserId(id, pageable));
     }
 
     @PatchMapping("/{id}")
