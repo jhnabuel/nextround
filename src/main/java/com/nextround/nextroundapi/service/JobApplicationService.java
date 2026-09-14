@@ -9,6 +9,7 @@ import com.nextround.nextroundapi.entity.Company;
 import com.nextround.nextroundapi.entity.JobApplication;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.ApplicationStatus;
+import com.nextround.nextroundapi.exception.InvalidSalaryRangeException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.mapper.JobApplicationMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
@@ -69,6 +70,12 @@ public class JobApplicationService {
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
         User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Company company = companyRepository.findById(jobApplicationRequest.companyId()).orElseThrow(() -> new ResourceNotFoundException("Company not found."));
+
+        if (jobApplicationRequest.salaryMin() != null && jobApplicationRequest.salaryMax() != null &&
+                jobApplicationRequest.salaryMin().compareTo(jobApplicationRequest.salaryMax()) > 0){
+            throw new InvalidSalaryRangeException("Invalid range. Minimum salary is greater than maximum salary.");
+        }
+
         JobApplication newJobApplication = new JobApplication(user,
                 company,
                 jobApplicationRequest.jobTitle(),
@@ -93,6 +100,11 @@ public class JobApplicationService {
         Company company = companyRepository.findById(jobApplicationRequest.companyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found."));
 
+        if (jobApplicationRequest.salaryMin() != null && jobApplicationRequest.salaryMax() != null &&
+                jobApplicationRequest.salaryMin().compareTo(jobApplicationRequest.salaryMax()) > 0){
+            throw new InvalidSalaryRangeException("Invalid range. Minimum salary is greater than maximum salary.");
+        }
+
         jobApplicationToBeEdited.setUser(user);
         jobApplicationToBeEdited.setCompany(company);
         jobApplicationToBeEdited.setJobTitle(jobApplicationRequest.jobTitle());
@@ -103,6 +115,7 @@ public class JobApplicationService {
         jobApplicationToBeEdited.setSalaryMax(jobApplicationRequest.salaryMax());
         jobApplicationToBeEdited.setCurrency(jobApplicationRequest.currency());
         jobApplicationToBeEdited.setAppliedDate(jobApplicationRequest.appliedDate());
+
 
         JobApplication updatedJobApplication = jobApplicationRepository.save(jobApplicationToBeEdited);
         return JobApplicationMapper.toDto(updatedJobApplication);

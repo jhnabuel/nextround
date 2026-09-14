@@ -40,4 +40,15 @@ public class GlobalExceptionHandler {
         body.put("message", "Invalid value for parameter '" + ex.getName() + "': " + ex.getValue());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InvalidSalaryRangeException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidSalary(InvalidSalaryRangeException exception){
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("message", exception.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+
 }
