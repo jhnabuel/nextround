@@ -15,5 +15,5 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     Page<JobApplication> findByCompanyId(UUID companyId, Pageable pageable);
     Page<JobApplication> findByStatus(ApplicationStatus status, Pageable pageable);
 
-    boolean existByCompanyId(UUID companyId);
+    boolean existsByCompanyId(UUID companyId);
 }

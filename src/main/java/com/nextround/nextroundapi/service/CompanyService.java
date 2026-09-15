@@ -3,9 +3,11 @@ package com.nextround.nextroundapi.service;
 import com.nextround.nextroundapi.dtos.CompanyRequest;
 import com.nextround.nextroundapi.dtos.CompanyResponse;
 import com.nextround.nextroundapi.entity.Company;
+import com.nextround.nextroundapi.exception.CompanyHasLinkedApplicationsException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.mapper.CompanyMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
+import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,9 +21,11 @@ import java.util.stream.Collectors;
 @Transactional
 public class CompanyService {
     private final CompanyRepository companyRepository;
+    private final JobApplicationRepository jobApplicationRepository;
 
-    CompanyService(CompanyRepository companyRepository){
+    CompanyService(CompanyRepository companyRepository, JobApplicationRepository jobApplicationRepository){
         this.companyRepository = companyRepository;
+        this.jobApplicationRepository = jobApplicationRepository;
     }
 
     private Company getCompanyByIdInternal(UUID id){
@@ -58,6 +62,11 @@ public class CompanyService {
     public void deleteCompany(UUID id){
         if(!companyRepository.existsById(id)){
             throw new ResourceNotFoundException("Company does not exist.");
+        }
+
+        if(jobApplicationRepository.existsByCompanyId(id)){
+            throw new CompanyHasLinkedApplicationsException("Cannot delete company with id: " + id
+                    + " because it has linked job applications.");
         }
         companyRepository.deleteById(id);
     }
