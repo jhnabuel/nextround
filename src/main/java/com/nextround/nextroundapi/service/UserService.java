@@ -5,6 +5,7 @@ import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.nextround.nextroundapi.mapper.UserMapper;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +19,14 @@ import java.util.stream.Collectors;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    
 
-    UserService(UserRepository userRepository){
+    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
+
 
     private User getUserByIdInternal(UUID id){
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Account not found with id: " + id));
@@ -37,16 +42,22 @@ public class UserService {
         return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
     }
 
+    public String registerUser(String rawPassword){
+        return passwordEncoder.encode(rawPassword);
+    }
+
     public UserResponse createUser(UserRequest userRequest){
-        User newUser = new User(userRequest.email(), userRequest.passwordHash(), userRequest.firstName(), userRequest.lastName());
+        String hashed = passwordEncoder.encode(userRequest.password());
+        User newUser = new User(userRequest.email(), hashed, userRequest.firstName(), userRequest.lastName());
         User savedUser = userRepository.save(newUser);
         return UserMapper.toDto(savedUser);
     }
 
     public UserResponse editUser(UUID id, UserRequest userRequest){
+
         User userToBeEdited = getUserByIdInternal(id);
         userToBeEdited.setEmail(userRequest.email());
-        userToBeEdited.setPasswordHash(userRequest.passwordHash());
+        userToBeEdited.setPasswordHash(userRequest.password());
         userToBeEdited.setFirstName(userRequest.firstName());
         userToBeEdited.setLastName(userRequest.lastName());
 

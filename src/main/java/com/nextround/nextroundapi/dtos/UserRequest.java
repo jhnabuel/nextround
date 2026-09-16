@@ -11,7 +11,7 @@ public record UserRequest(
 
         @NotBlank(message = "Password is required")
         @Size(min = 6, message = "Password must be at least 6 characters")
-        String passwordHash,
+        String password,
 
         @NotBlank(message = "First name is required")
         @Size(max = 50, message = "First name cannot exceed 50 characters")
