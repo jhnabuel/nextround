@@ -1,5 +1,6 @@
 package com.nextround.nextroundapi.entity;
 
+import com.nextround.nextroundapi.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,10 @@ public class User {
 
     @Column(nullable = false, length = 50)
     private String lastName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

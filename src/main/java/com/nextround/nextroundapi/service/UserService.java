@@ -3,6 +3,7 @@ package com.nextround.nextroundapi.service;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
+import com.nextround.nextroundapi.exception.EmailAlreadyExistsException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,9 +48,15 @@ public class UserService {
     }
 
     public UserResponse createUser(UserRequest userRequest){
-        String hashed = passwordEncoder.encode(userRequest.password());
-        User newUser = new User(userRequest.email(), hashed, userRequest.firstName(), userRequest.lastName());
+        if(userRepository.existsByEmail(userRequest.email())){
+            throw new EmailAlreadyExistsException("Email already registered");
+        }
+
+        String hashedPassword = passwordEncoder.encode(userRequest.password());
+
+        User newUser = new User(userRequest.email(), hashedPassword, userRequest.firstName(), userRequest.lastName());
         User savedUser = userRepository.save(newUser);
+        
         return UserMapper.toDto(savedUser);
     }
 
