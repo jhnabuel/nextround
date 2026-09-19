@@ -35,7 +35,7 @@ public class User {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private Role role = Role.USER;
 
     @CreationTimestamp
@@ -46,10 +46,11 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public User(String email, String passwordHash, String firstName, String lastName){
+    public User(String email, String passwordHash, String firstName, String lastName, Role role){
         this.email = email;
         this.passwordHash = passwordHash;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.role = role;
     }
 }

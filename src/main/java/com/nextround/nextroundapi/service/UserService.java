@@ -3,6 +3,7 @@ package com.nextround.nextroundapi.service;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
+import com.nextround.nextroundapi.enums.Role;
 import com.nextround.nextroundapi.exception.EmailAlreadyExistsException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
@@ -52,9 +53,9 @@ public class UserService {
             throw new EmailAlreadyExistsException("Email already registered");
         }
 
-        String hashedPassword = passwordEncoder.encode(userRequest.password());
+        String hashedPassword = registerUser(userRequest.password());
 
-        User newUser = new User(userRequest.email(), hashedPassword, userRequest.firstName(), userRequest.lastName());
+        User newUser = new User(userRequest.email(), hashedPassword, userRequest.firstName(), userRequest.lastName(), Role.USER);
         User savedUser = userRepository.save(newUser);
         
         return UserMapper.toDto(savedUser);
