@@ -1,15 +1,20 @@
 package com.nextround.nextroundapi.service;
+import com.nextround.nextroundapi.dtos.AuthResponse;
+import com.nextround.nextroundapi.dtos.LoginRequest;
 import com.nextround.nextroundapi.dtos.RegisterRequest;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.Role;
 import com.nextround.nextroundapi.exception.EmailAlreadyExistsException;
+import com.nextround.nextroundapi.mapper.UserMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+
 public class AuthenticationService {
     private final UserRepository userRepository;
 
@@ -30,7 +35,8 @@ public class AuthenticationService {
         return passwordEncoder.encode(rawPassword);
     }
 
-    public User signup(RegisterRequest registerRequest) {
+    @Transactional
+    public AuthResponse signup(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.email())) {
             throw new EmailAlreadyExistsException("Email already registered");
         }
@@ -40,6 +46,19 @@ public class AuthenticationService {
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(savedUser);
 
-        return new 
+        return new AuthResponse(jwtToken, "Bearer", jwtService.getExpirationTime(), UserMapper.toDto(savedUser));
+    }
+
+
+    @Transactional
+    public AuthResponse login(LoginRequest loginRequest){
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.email(),
+                        loginRequest.password()
+                )
+        );
+
+        User user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() -> new U)
     }
 }
