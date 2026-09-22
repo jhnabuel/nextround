@@ -5,6 +5,7 @@ import com.nextround.nextroundapi.dtos.RegisterRequest;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.Role;
 import com.nextround.nextroundapi.exception.EmailAlreadyExistsException;
+import com.nextround.nextroundapi.exception.UsernameNotFoundException;
 import com.nextround.nextroundapi.mapper.UserMapper;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -59,6 +60,15 @@ public class AuthenticationService {
                 )
         );
 
-        User user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() -> new U)
+        User user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + loginRequest.email()));
+
+        String token = jwtService.generateToken(user);
+        return new AuthResponse(
+                token,
+                "Bearer",
+                jwtService.getExpirationTime(),
+                UserMapper.toDto(user)
+        );
+
     }
 }
