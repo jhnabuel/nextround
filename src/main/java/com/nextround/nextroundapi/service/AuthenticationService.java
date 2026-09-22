@@ -37,12 +37,13 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthResponse signup(RegisterRequest registerRequest) {
+    public AuthResponse register(RegisterRequest registerRequest) {
         if (userRepository.existsByEmail(registerRequest.email())) {
             throw new EmailAlreadyExistsException("Email already registered");
         }
 
-        User user = new User(registerRequest.email(), registerRequest.password(), registerRequest.firstName(), registerRequest.lastName(), Role.USER);
+        String encryptedPassword = encryptPassword(registerRequest.password());
+        User user = new User(registerRequest.email(), encryptedPassword, registerRequest.firstName(), registerRequest.lastName(), Role.USER);
 
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(savedUser);
