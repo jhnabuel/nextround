@@ -52,7 +52,7 @@ public class AuthenticationService {
     }
 
 
-    @Transactional
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest loginRequest){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
