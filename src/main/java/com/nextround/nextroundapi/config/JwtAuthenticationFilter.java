@@ -39,9 +39,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 1. Guard clause: check for Bearer token presence
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
             filterChain.doFilter(request, response);
+            return;
         }
 
-        assert authHeader != null;
         final String jwt = authHeader.substring(7);
         final String userEmail;
 
