@@ -8,6 +8,8 @@ import com.nextround.nextroundapi.service.JobApplicationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,11 +38,18 @@ public class JobApplicationController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<JobApplicationResponse>> getAllJobApplications(@RequestParam(required = false)ApplicationStatus status, Pageable pageable){
-        if (status != null){
+    public ResponseEntity<Page<JobApplicationResponse>> getAllJobApplications(
+            @RequestParam(required = false) ApplicationStatus status,
+            @RequestParam(required = false) UUID companyId,
+            @PageableDefault(size = 15, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        if (companyId != null) {
+            return ResponseEntity.ok(jobApplicationService.getApplicationsByCompanyId(companyId, pageable));
+        }
+        if (status != null) {
             return ResponseEntity.ok(jobApplicationService.getApplicationsByStatus(status, pageable));
         }
-        return ResponseEntity.ok(jobApplicationService.getAllJobApplications(pageable));
+        return ResponseEntity.ok(jobApplicationService.getAllJobApplicationsForCurrentUser(pageable));
     }
 
 
