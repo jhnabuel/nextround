@@ -42,6 +42,9 @@ public class JobApplicationService {
     }
     private User getAuthenticatedUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication == null || !authentication.isAuthenticated()){
+            throw new UnauthorizedException("User is not authenticated.");
+        }
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
     }
@@ -68,7 +71,7 @@ public class JobApplicationService {
     @Transactional(readOnly = true)
     public Page<JobApplicationResponse> getAllJobApplicationsForCurrentUser(Pageable pageable){
         User currentUser = getAuthenticatedUser();
-        return jobApplicationRepository.findByUserId(currentUser.getId(), pageable).map(JobApplicationMapper::toDto);
+        return jobApplicationRepository.findAllByUserId(currentUser.getId(), pageable).map(JobApplicationMapper::toDto);
     }
 
     @Transactional(readOnly = true)
