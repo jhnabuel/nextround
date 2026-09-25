@@ -12,8 +12,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 public record JobApplicationRequest(
-        @NotNull(message = "User ID is required")
-        UUID userId,
 
         @NotNull(message = "Company ID is required")
         UUID companyId,

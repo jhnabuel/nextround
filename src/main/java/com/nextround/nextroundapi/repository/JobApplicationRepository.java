@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface JobApplicationRepository extends JpaRepository<JobApplication, UUID> {
@@ -14,6 +15,9 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     Page<JobApplication> findByUserId(UUID userId, Pageable pageable);
     Page<JobApplication> findByCompanyId(UUID companyId, Pageable pageable);
     Page<JobApplication> findByStatus(ApplicationStatus status, Pageable pageable);
+    Optional<JobApplication> findByIdAndUserId(UUID id, UUID userId);
+
 
     boolean existsByCompanyId(UUID companyId);
+    boolean existsByIdAndUserId(UUID id, UUID userId);
 }

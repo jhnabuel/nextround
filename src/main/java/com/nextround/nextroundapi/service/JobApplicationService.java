@@ -12,6 +12,7 @@ import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.exception.InvalidSalaryRangeException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.exception.UnauthorizedException;
+import com.nextround.nextroundapi.exception.UsernameNotFoundException;
 import com.nextround.nextroundapi.mapper.JobApplicationMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
@@ -39,7 +40,11 @@ public class JobApplicationService {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
     }
-
+    private User getAuthenticatedUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
+    }
 
     private JobApplication getJobApplicationByIdInternal(UUID id){
         return jobApplicationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Job Application not found."));
@@ -47,7 +52,12 @@ public class JobApplicationService {
 
     @Transactional(readOnly = true)
     public  JobApplicationResponse getJobApplicationById(UUID id){
-        return JobApplicationMapper.toDto(getJobApplicationByIdInternal(id));
+        User currentUser = getAuthenticatedUser();
+
+        JobApplication application = jobApplicationRepository.findByIdAndUserId(id, currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + id));
+
+        return JobApplicationMapper.toDto(application);
     }
 
     @Transactional(readOnly = true)
@@ -136,10 +146,12 @@ public class JobApplicationService {
         return JobApplicationMapper.toDto(updatedJobApplication);
     }
 
+    @Transactional
     public void deleteJobApplication(UUID id){
-        if(!jobApplicationRepository.existsById(id)){
-            throw new ResourceNotFoundException("Job application does not exist.");
-        }
+        User currentUser = getAuthenticatedUser();
+        JobApplication application = jobApplicationRepository.findByIdAndUserId(id, currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + id));
+
         jobApplicationRepository.deleteById(id);
     }
 
