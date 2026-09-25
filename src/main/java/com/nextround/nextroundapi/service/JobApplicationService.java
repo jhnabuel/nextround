@@ -11,12 +11,15 @@ import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.exception.InvalidSalaryRangeException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
+import com.nextround.nextroundapi.exception.UnauthorizedException;
 import com.nextround.nextroundapi.mapper.JobApplicationMapper;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -67,16 +70,28 @@ public class JobApplicationService {
         return jobApplicationRepository.findAll(pageable).map(JobApplicationMapper::toDto);
     }
 
+    @Transactional
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
-        User user = userRepository.findById(jobApplicationRequest.userId()).orElseThrow(() -> new ResourceNotFoundException("User not found."));
-        Company company = companyRepository.findById(jobApplicationRequest.companyId()).orElseThrow(() -> new ResourceNotFoundException("Company not found."));
-
         if (jobApplicationRequest.salaryMin() != null && jobApplicationRequest.salaryMax() != null &&
                 jobApplicationRequest.salaryMin().compareTo(jobApplicationRequest.salaryMax()) > 0){
             throw new InvalidSalaryRangeException("Invalid range. Minimum salary is greater than maximum salary.");
         }
 
-        JobApplication newJobApplication = new JobApplication(user,
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication == null || !authentication.isAuthenticated()){
+            throw new UnauthorizedException("User is not authenticated.");
+        }
+
+
+        User currentUser = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+
+        Company company = companyRepository.findById(jobApplicationRequest.companyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found."));
+
+
+
+        JobApplication newJobApplication = new JobApplication(currentUser,
                 company,
                 jobApplicationRequest.jobTitle(),
                 jobApplicationRequest.jobUrl(),
