@@ -42,11 +42,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @GetMapping("/{id}/applications")
-    public ResponseEntity<Page<JobApplicationResponse>> getApplicationsByUser(@PathVariable UUID id, Pageable pageable){
-        return ResponseEntity.ok(jobApplicationService.getApplicationByUserId(id, pageable));
-    }
-
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id,
                                                    @Valid @RequestBody UserRequest userRequest){

@@ -42,11 +42,6 @@ public class CompanyController {
         return ResponseEntity.ok(companyService.getAllCompanies(pageable));
     }
 
-    @GetMapping("/{id}/applications")
-    public ResponseEntity<Page<JobApplicationResponse>> getApplicationsByCompany(@PathVariable UUID id, Pageable pageable){
-        return ResponseEntity.ok(jobApplicationService.getApplicationsByCompanyId(id, pageable));
-    }
-
     @PatchMapping("/{id}")
     public ResponseEntity<CompanyResponse> updateCompany(@PathVariable UUID id, @Valid @RequestBody CompanyRequest companyRequest){
         CompanyResponse updatedCompany = companyService.editCompany(id, companyRequest);
