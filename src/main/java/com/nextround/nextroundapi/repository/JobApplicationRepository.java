@@ -17,8 +17,9 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     // Paginated list filtered by target company for the user
     Page<JobApplication> findByCompanyIdAndUserId(UUID companyId, UUID userId, Pageable pageable);
 
-    Page<JobApplication> findByStatus(ApplicationStatus status, Pageable pageable);
-    
+    //Paginated list filtered by status for the user
+    Page<JobApplication> findByStatusAndUserId(ApplicationStatus status, UUID userId, Pageable pageable);
+
     Optional<JobApplication> findByIdAndUserId(UUID id, UUID userId);
 
 

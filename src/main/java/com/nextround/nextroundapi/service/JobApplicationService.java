@@ -80,7 +80,9 @@ public class JobApplicationService {
 
     @Transactional(readOnly = true)
     public Page<JobApplicationResponse> getApplicationsByStatus(ApplicationStatus status, Pageable pageable){
-        return jobApplicationRepository.findByStatus(status, pageable).map(JobApplicationMapper::toDto);
+        User currentUser = getAuthenticatedUser();
+        return jobApplicationRepository.findByStatusAndUserId(status, currentUser.getId(), pageable)
+                .map(JobApplicationMapper::toDto);
     }
 
 
