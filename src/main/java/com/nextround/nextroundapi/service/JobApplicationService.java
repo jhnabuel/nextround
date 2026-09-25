@@ -98,9 +98,7 @@ public class JobApplicationService {
 
         Company company = companyRepository.findById(jobApplicationRequest.companyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found."));
-
-
-
+        
         JobApplication newJobApplication = new JobApplication(currentUser,
                 company,
                 jobApplicationRequest.jobTitle(),
@@ -116,22 +114,24 @@ public class JobApplicationService {
         return JobApplicationMapper.toDto(addJobApplication);
     }
 
-
+    @Transactional
     public JobApplicationResponse editJobApplication(UUID id, JobApplicationRequest jobApplicationRequest){
-        JobApplication jobApplicationToBeEdited = getJobApplicationByIdInternal(id);
-
-        User user = userRepository.findById(jobApplicationRequest.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
-        Company company = companyRepository.findById(jobApplicationRequest.companyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found."));
-
         if (jobApplicationRequest.salaryMin() != null && jobApplicationRequest.salaryMax() != null &&
-                jobApplicationRequest.salaryMin().compareTo(jobApplicationRequest.salaryMax()) > 0){
-            throw new InvalidSalaryRangeException("Invalid range. Minimum salary is greater than maximum salary.");
+                jobApplicationRequest.salaryMin().compareTo(jobApplicationRequest.salaryMax()) > 0) {
+            throw new InvalidSalaryRangeException("Invalid range: Minimum salary cannot exceed maximum salary.");
         }
 
-        jobApplicationToBeEdited.setUser(user);
-        jobApplicationToBeEdited.setCompany(company);
+        User currentUser = getAuthenticatedUser();
+        JobApplication jobApplicationToBeEdited = jobApplicationRepository.findByIdAndUserId(id, currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + id));
+
+
+        if (!jobApplicationToBeEdited.getCompany().getId().equals(jobApplicationRequest.companyId())) {
+            Company newCompany = companyRepository.findById(jobApplicationRequest.companyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + jobApplicationRequest.companyId()));
+            jobApplicationToBeEdited.setCompany(newCompany);
+        }
+
         jobApplicationToBeEdited.setJobTitle(jobApplicationRequest.jobTitle());
         jobApplicationToBeEdited.setJobUrl(jobApplicationRequest.jobUrl());
         jobApplicationToBeEdited.setStatus(jobApplicationRequest.applicationStatus());
@@ -152,7 +152,7 @@ public class JobApplicationService {
         JobApplication application = jobApplicationRepository.findByIdAndUserId(id, currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + id));
 
-        jobApplicationRepository.deleteById(id);
+        jobApplicationRepository.delete(application);
     }
 
 
