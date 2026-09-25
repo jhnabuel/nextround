@@ -46,14 +46,19 @@ public class JobApplicationService {
                 .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
     }
 
-    private JobApplication getJobApplicationByIdInternal(UUID id){
-        return jobApplicationRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Job Application not found."));
+    private void validateSalaryRange(JobApplicationRequest request) {
+        if (request.salaryMin() != null && request.salaryMax() != null &&
+                request.salaryMin().compareTo(request.salaryMax()) > 0) {
+            throw new InvalidSalaryRangeException("Invalid range: Minimum salary cannot exceed maximum salary.");
+        }
     }
+    // ==========================================
+    // READ (Tenant-Scoped)
+    // ==========================================
 
     @Transactional(readOnly = true)
-    public  JobApplicationResponse getJobApplicationById(UUID id){
+    public JobApplicationResponse getJobApplicationById(UUID id){
         User currentUser = getAuthenticatedUser();
-
         JobApplication application = jobApplicationRepository.findByIdAndUserId(id, currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job application not found with id: " + id));
 
@@ -61,13 +66,16 @@ public class JobApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<JobApplicationResponse> getApplicationByUserId(UUID userId, Pageable pageable){
-        return jobApplicationRepository.findByUserId(userId, pageable).map(JobApplicationMapper::toDto);
+    public Page<JobApplicationResponse> getAllJobApplicationsForCurrentUser(Pageable pageable){
+        User currentUser = getAuthenticatedUser();
+        return jobApplicationRepository.findByUserId(currentUser.getId(), pageable).map(JobApplicationMapper::toDto);
     }
 
     @Transactional(readOnly = true)
     public Page<JobApplicationResponse> getApplicationsByCompanyId(UUID companyId, Pageable pageable){
-        return jobApplicationRepository.findByCompanyId(companyId, pageable).map(JobApplicationMapper::toDto);
+        User currentUser = getAuthenticatedUser();
+        return jobApplicationRepository.findByCompanyIdAndUserId(companyId, currentUser.getId(), pageable)
+                .map(JobApplicationMapper::toDto);
     }
 
     @Transactional(readOnly = true)
@@ -75,30 +83,16 @@ public class JobApplicationService {
         return jobApplicationRepository.findByStatus(status, pageable).map(JobApplicationMapper::toDto);
     }
 
-    @Transactional(readOnly = true)
-    public Page<JobApplicationResponse> getAllJobApplications(Pageable pageable){
-        return jobApplicationRepository.findAll(pageable).map(JobApplicationMapper::toDto);
-    }
 
     @Transactional
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){
-        if (jobApplicationRequest.salaryMin() != null && jobApplicationRequest.salaryMax() != null &&
-                jobApplicationRequest.salaryMin().compareTo(jobApplicationRequest.salaryMax()) > 0){
-            throw new InvalidSalaryRangeException("Invalid range. Minimum salary is greater than maximum salary.");
-        }
+        validateSalaryRange(jobApplicationRequest);
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication == null || !authentication.isAuthenticated()){
-            throw new UnauthorizedException("User is not authenticated.");
-        }
-
-
-        User currentUser = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        User currentUser = getAuthenticatedUser();
 
         Company company = companyRepository.findById(jobApplicationRequest.companyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found."));
-        
+
         JobApplication newJobApplication = new JobApplication(currentUser,
                 company,
                 jobApplicationRequest.jobTitle(),
@@ -116,10 +110,7 @@ public class JobApplicationService {
 
     @Transactional
     public JobApplicationResponse editJobApplication(UUID id, JobApplicationRequest jobApplicationRequest){
-        if (jobApplicationRequest.salaryMin() != null && jobApplicationRequest.salaryMax() != null &&
-                jobApplicationRequest.salaryMin().compareTo(jobApplicationRequest.salaryMax()) > 0) {
-            throw new InvalidSalaryRangeException("Invalid range: Minimum salary cannot exceed maximum salary.");
-        }
+        validateSalaryRange(jobApplicationRequest);
 
         User currentUser = getAuthenticatedUser();
         JobApplication jobApplicationToBeEdited = jobApplicationRepository.findByIdAndUserId(id, currentUser.getId())
@@ -141,9 +132,7 @@ public class JobApplicationService {
         jobApplicationToBeEdited.setCurrency(jobApplicationRequest.currency());
         jobApplicationToBeEdited.setAppliedDate(jobApplicationRequest.appliedDate());
 
-
-        JobApplication updatedJobApplication = jobApplicationRepository.save(jobApplicationToBeEdited);
-        return JobApplicationMapper.toDto(updatedJobApplication);
+        return JobApplicationMapper.toDto(jobApplicationRepository.save(jobApplicationToBeEdited));
     }
 
     @Transactional

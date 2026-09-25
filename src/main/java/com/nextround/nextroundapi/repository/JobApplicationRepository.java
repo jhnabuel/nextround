@@ -13,8 +13,12 @@ import java.util.UUID;
 public interface JobApplicationRepository extends JpaRepository<JobApplication, UUID> {
 
     Page<JobApplication> findByUserId(UUID userId, Pageable pageable);
-    Page<JobApplication> findByCompanyId(UUID companyId, Pageable pageable);
+
+    // Paginated list filtered by target company for the user
+    Page<JobApplication> findByCompanyIdAndUserId(UUID companyId, UUID userId, Pageable pageable);
+
     Page<JobApplication> findByStatus(ApplicationStatus status, Pageable pageable);
+    
     Optional<JobApplication> findByIdAndUserId(UUID id, UUID userId);
 
 
