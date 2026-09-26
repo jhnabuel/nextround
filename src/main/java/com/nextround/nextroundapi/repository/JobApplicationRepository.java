@@ -23,4 +23,6 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
     
     // Tenant isolated existence check
     boolean existsByIdAndUserId(UUID id, UUID userId);
+
+    boolean existsByCompanyId(UUID companyId);
 }
