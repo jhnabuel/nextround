@@ -160,4 +160,38 @@ public class UserServiceTest {
             verify(userRepository, times(1)).findById(nonExistentId);
         }
     }
+
+    @Nested
+    @DisplayName("deleteUser()")
+    class DeleteUserTests {
+
+        @Test
+        @DisplayName("Should delete user when entity exists")
+        void shouldDeleteUserWhenExists() {
+            // Arrange
+            when(userRepository.existsById(sampleUserId)).thenReturn(true);
+
+            // Act
+            userService.deleteUser(sampleUserId);
+
+            // Assert
+            verify(userRepository).deleteById(sampleUserId);
+        }
+
+        @Test
+        @DisplayName("Should throw ResourceNotFoundException when deleting non-existent user")
+        void shouldThrowExceptionWhenDeletingNonExistentUser() {
+            // Arrange
+            UUID nonExistentId = UUID.randomUUID();
+            when(userRepository.existsById(nonExistentId)).thenReturn(false);
+
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.deleteUser(nonExistentId)).isInstanceOf(ResourceNotFoundException.class)
+                            .hasMessageContaining("User not found.");
+
+
+            verify(userRepository, never()).deleteById(any());
+        }
+    }
 }
