@@ -37,7 +37,6 @@ import org.hibernate.annotations.UpdateTimestamp;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    protected Company(){}
 
     public Company(String companyName, String websiteUrl, String industry, String location){
         this.companyName = companyName;
