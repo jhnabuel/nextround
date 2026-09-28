@@ -44,6 +44,14 @@ public class UserService {
         return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+        return UserMapper.toDto(user);
+    }
+
     public String registerUser(String rawPassword){
         return passwordEncoder.encode(rawPassword);
     }

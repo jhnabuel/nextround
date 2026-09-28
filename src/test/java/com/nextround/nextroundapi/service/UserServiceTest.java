@@ -160,6 +160,33 @@ public class UserServiceTest {
             verify(userRepository, times(1)).findById(nonExistentId);
         }
     }
+    @Nested
+    @DisplayName("getUserByEmail")
+    class GetUserByEmailTests{
+        @Test
+        @DisplayName("Should return UserResponse when email matches")
+        void shouldReturnUserResponseWhenEmailMatches(){
+            String email = "john@example.com";
+            given(userRepository.findByEmail(email)).willReturn(Optional.of(sampleUser));
+
+            UserResponse response = userService.getUserByEmail(email);
+
+            assertThat(response).isNotNull();
+            assertThat(response.email()).isEqualTo(email);
+            verify(userRepository, times(1)).findByEmail(email);
+        }
+
+        @Test
+        @DisplayName("Should throw ResourceNotFoundException when email does not exist")
+        void shouldThrowResourceNotFoundExceptionWhenEmailDoesNotExist(){
+            String nonExistentEmail = "ghost@example.com";
+            given(userRepository.findByEmail(nonExistentEmail)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> userService.getUserByEmail(nonExistentEmail))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining(nonExistentEmail);
+        }
+    }
 
     @Nested
     @DisplayName("deleteUser()")
