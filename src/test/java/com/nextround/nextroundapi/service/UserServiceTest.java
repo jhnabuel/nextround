@@ -5,6 +5,7 @@ import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.Role;
 import com.nextround.nextroundapi.exception.EmailAlreadyExistsException;
+import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -25,8 +27,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -121,6 +122,42 @@ public class UserServiceTest {
 
             verify(passwordEncoder, never()).encode(anyString());
             verify(userRepository, never()).save(any(User.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("getUserById()")
+    class GetUserByIdTests {
+
+        @Test
+        @DisplayName("Should return UserResponse when user exists")
+        void shouldReturnUserResponseWhenUserExists() {
+            // Arrange
+            given(userRepository.findById(sampleUserId)).willReturn(Optional.of(sampleUser));
+
+            // Act
+            UserResponse response = userService.getUserById(sampleUserId);
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.id()).isEqualTo(sampleUserId);
+            assertThat(response.email()).isEqualTo(sampleUser.getEmail());
+            verify(userRepository, times(1)).findById(sampleUserId);
+        }
+
+        @Test
+        @DisplayName("Should throw ResourceNotFoundException when user does not exist")
+        void shouldThrowResourceNotFoundExceptionWhenUserNotFound() {
+            // Arrange
+            UUID nonExistentId = UUID.randomUUID();
+            given(userRepository.findById(nonExistentId)).willReturn(Optional.empty());
+
+            // Act & Assert
+            assertThatThrownBy(() -> userService.getUserById(nonExistentId))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining(nonExistentId.toString());
+
+            verify(userRepository, times(1)).findById(nonExistentId);
         }
     }
 }
