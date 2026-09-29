@@ -77,11 +77,9 @@ public class JobApplicationServiceTest {
         currentUser = new User("john@example.com", "hash", "John", "Doe", Role.USER);
         currentUser.setId(currentUserId);
 
-        Company company = new Company("Vercel", "https://vercel.com/careers", "Tech", "Remote");
-        company.setId(UUID.randomUUID());
-        company.setCompanyName("Vercel");
-        company.setWebsiteUrl("https://vercel.com/careers");
-        company.setLocation("Remote");
+        companyId = UUID.randomUUID();
+        sampleCompany = new Company("Vercel", "https://vercel.com/careers", "Tech", "Remote");
+        sampleCompany.setId(companyId);
 
         applicationId = UUID.randomUUID();
         sampleApplication = new JobApplication(
@@ -112,6 +110,65 @@ public class JobApplicationServiceTest {
         when(authentication.getName()).thenReturn("john@example.com");
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(currentUser));
     }
+    @Nested
+    @DisplayName("Create Job Application Tests")
+    class CreateJobApplicationTests{
+        @Test
+        @DisplayName("Should create application successfully when data and salary range are valid")
+        void createJobApplication_Success(){
+            mockAuthenticatedUser();
+            JobApplicationRequest request = new JobApplicationRequest(companyId,
+                    "Backend Engineer",
+                    "https://stripe.com/jobs/123",
+                    ApplicationStatus.APPLIED,
+                    WorkLocationType.REMOTE,
+                    BigDecimal.valueOf(90000),
+                    BigDecimal.valueOf(120000),
+                    "USD",
+                    LocalDate.of(2026, 9, 1));
 
+
+            when(companyRepository.findById(companyId)).thenReturn(Optional.of(sampleCompany));
+            when(jobApplicationRepository.save(any(JobApplication.class))).thenReturn(sampleApplication);
+
+            JobApplicationResponse response = jobApplicationService.createJobApplication(request);
+
+            assertThat(response).isNotNull();
+            assertThat(response.id()).isEqualTo(applicationId);
+            assertThat(response.jobTitle()).isEqualTo("Backend Engineer");
+            assertThat(response.applicationStatus()).isEqualTo(ApplicationStatus.APPLIED);
+
+            ArgumentCaptor<JobApplication> captor = ArgumentCaptor.forClass(JobApplication.class);
+            verify(jobApplicationRepository).save(captor.capture());
+            JobApplication saved = captor.getValue();
+
+            assertThat(saved.getUser().getId()).isEqualTo(currentUserId);
+            assertThat(saved.getCompany().getId()).isEqualTo(companyId);
+            assertThat(saved.getSalaryMin()).isEqualByComparingTo(BigDecimal.valueOf(90000));
+        }
+    }
+
+    @Test
+    @DisplayName("Should throw InvalidSalaryRangeException when salaryMin exceeds salaryMax")
+    void createJobApplication_InvalidSalaryRange_throwsException(){
+        JobApplicationRequest request = new JobApplicationRequest(
+                companyId,
+                "Backend Engineer",
+                "https://stripe.com/jobs/123",
+                ApplicationStatus.APPLIED,
+                WorkLocationType.REMOTE,
+                BigDecimal.valueOf(150000), // salaryMin > salaryMax
+                BigDecimal.valueOf(100000),
+                "USD",
+                LocalDate.of(2026, 9, 1)
+        );
+
+        assertThatThrownBy(() -> jobApplicationService.createJobApplication(request))
+                .isInstanceOf(InvalidSalaryRangeException.class)
+                .hasMessageContaining("Minimum salary cannot exceed maximum salary");
+
+        verify(companyRepository, never()).findById(any());
+        verify(jobApplicationRepository, never()).save(any());
+    }
 
 }
