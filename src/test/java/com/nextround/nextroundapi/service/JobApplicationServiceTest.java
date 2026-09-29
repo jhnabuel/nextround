@@ -171,4 +171,31 @@ public class JobApplicationServiceTest {
         verify(jobApplicationRepository, never()).save(any());
     }
 
+
+    @Test
+    @DisplayName("Should throw UnauthorizedException when security context has no authentication")
+    void createJobApplication_NotAuthenticated_ThrowsException() {
+        JobApplicationRequest request = new JobApplicationRequest(
+                companyId,
+                "Backend Engineer",
+                "https://stripe.com/jobs/123",
+                ApplicationStatus.APPLIED,
+                WorkLocationType.REMOTE,
+                BigDecimal.valueOf(90000),
+                BigDecimal.valueOf(120000),
+                "USD",
+                LocalDate.of(2026, 9, 1)
+        );
+
+        when(securityContext.getAuthentication()).thenReturn(null);
+
+        assertThatThrownBy(() -> jobApplicationService.createJobApplication(request))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessageContaining("User is not authenticated");
+
+        verify(jobApplicationRepository, never()).save(any());
+    }
+
+
+
 }
