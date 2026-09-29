@@ -38,8 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -239,6 +238,23 @@ public class JobApplicationServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.id()).isEqualTo(applicationId);
             verify(jobApplicationRepository).findByIdAndUserId(applicationId, currentUserId);
+        }
+
+        @Test
+        @DisplayName("Should return paginated list strictly scoped by current user ID")
+        void getAllJobApplicationsForCurrentUser_shouldReturnPaginatedResponse(){
+            mockAuthenticatedUser();
+            Pageable pageable = PageRequest.of(0,10);
+            Page<JobApplication> page = new PageImpl<>(List.of(sampleApplication));
+
+            when(jobApplicationRepository.findAllByUserId(currentUserId, pageable)).thenReturn(page);
+
+            Page<JobApplicationResponse> response = jobApplicationService.getAllJobApplicationsForCurrentUser(pageable);
+
+            assertThat(response).isNotNull();
+            assertThat(response.getContent()).hasSize(1);
+            assertThat(response.getContent().getFirst().id()).isEqualTo(applicationId);
+            verify(jobApplicationRepository).findAllByUserId(currentUserId, pageable);
         }
     }
 }
