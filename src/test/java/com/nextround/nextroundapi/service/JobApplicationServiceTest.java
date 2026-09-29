@@ -196,6 +196,32 @@ public class JobApplicationServiceTest {
         verify(jobApplicationRepository, never()).save(any());
     }
 
+    @Nested
+    @DisplayName("Delete Job Application Tests")
+    class DeleteJobApplicationTests{
+        @Test
+        @DisplayName("Should delete application entity when tenant ownership is verified")
+        void deleteJobApplication_Success() {
+            mockAuthenticatedUser();
+            when(jobApplicationRepository.findByIdAndUserId(applicationId, currentUserId))
+                    .thenReturn(Optional.of(sampleApplication));
 
+            jobApplicationService.deleteJobApplication(applicationId);
 
+            verify(jobApplicationRepository).delete(sampleApplication);
+        }
+
+        @Test
+        @DisplayName("Should not delete and throw ResourceNotFoundException when application belongs to another user")
+        void deleteJobApplication_UnauthorizedTenant_ThrowsException() {
+            mockAuthenticatedUser();
+            when(jobApplicationRepository.findByIdAndUserId(applicationId, currentUserId))
+                    .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> jobApplicationService.deleteJobApplication(applicationId))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
+            verify(jobApplicationRepository, never()).delete(any());
+        }
+    }
 }
