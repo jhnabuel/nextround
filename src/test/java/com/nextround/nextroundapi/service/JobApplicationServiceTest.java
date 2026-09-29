@@ -224,4 +224,21 @@ public class JobApplicationServiceTest {
             verify(jobApplicationRepository, never()).delete(any());
         }
     }
+
+    @Nested
+    @DisplayName("Read and Tenant Isolation Tests")
+    class ReadJobApplicationTests {
+        @Test
+        @DisplayName("Should return application by id scoped to authenticated user")
+        void getJobApplicationById_shouldReturnJobApplicationResponse(){
+            mockAuthenticatedUser();
+            when(jobApplicationRepository.findByIdAndUserId(applicationId, currentUserId)).thenReturn(Optional.of(sampleApplication));
+
+            JobApplicationResponse response = jobApplicationService.getJobApplicationById(applicationId);
+
+            assertThat(response).isNotNull();
+            assertThat(response.id()).isEqualTo(applicationId);
+            verify(jobApplicationRepository).findByIdAndUserId(applicationId, currentUserId);
+        }
+    }
 }
