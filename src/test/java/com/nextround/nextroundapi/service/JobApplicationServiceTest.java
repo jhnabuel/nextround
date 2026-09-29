@@ -256,5 +256,20 @@ public class JobApplicationServiceTest {
             assertThat(response.getContent().getFirst().id()).isEqualTo(applicationId);
             verify(jobApplicationRepository).findAllByUserId(currentUserId, pageable);
         }
+
+        @Test
+        @DisplayName("Should throw ResourceNotFoundException when application belongs to another user")
+        void getJobApplicationById_belongsToAnotherTenant_throwsException(){
+            mockAuthenticatedUser();
+            UUID randomApplicationId = UUID.randomUUID();
+
+            when(jobApplicationRepository.findByIdAndUserId(randomApplicationId, currentUserId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> jobApplicationService.getJobApplicationById(randomApplicationId))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining("Job application not found with id: " + randomApplicationId);
+
+            verify(jobApplicationRepository).findByIdAndUserId(randomApplicationId, currentUserId);
+        }
     }
 }
