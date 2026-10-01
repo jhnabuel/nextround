@@ -111,10 +111,10 @@ public class JobApplicationServiceTest {
     }
     @Nested
     @DisplayName("Create Job Application Tests")
-    class CreateJobApplicationTests{
+    class CreateJobApplicationTests {
         @Test
         @DisplayName("Should create application successfully when data and salary range are valid")
-        void createJobApplication_Success(){
+        void createJobApplication_Success() {
             mockAuthenticatedUser();
             JobApplicationRequest request = new JobApplicationRequest(companyId,
                     "Backend Engineer",
@@ -145,56 +145,57 @@ public class JobApplicationServiceTest {
             assertThat(saved.getCompany().getId()).isEqualTo(companyId);
             assertThat(saved.getSalaryMin()).isEqualByComparingTo(BigDecimal.valueOf(90000));
         }
+
+
+        @Test
+        @DisplayName("Should throw InvalidSalaryRangeException when salaryMin exceeds salaryMax")
+        void createJobApplication_InvalidSalaryRange_throwsException() {
+            JobApplicationRequest request = new JobApplicationRequest(
+                    companyId,
+                    "Backend Engineer",
+                    "https://stripe.com/jobs/123",
+                    ApplicationStatus.APPLIED,
+                    WorkLocationType.REMOTE,
+                    BigDecimal.valueOf(150000), // salaryMin > salaryMax
+                    BigDecimal.valueOf(100000),
+                    "USD",
+                    LocalDate.of(2026, 9, 1)
+            );
+
+            assertThatThrownBy(() -> jobApplicationService.createJobApplication(request))
+                    .isInstanceOf(InvalidSalaryRangeException.class)
+                    .hasMessageContaining("Minimum salary cannot exceed maximum salary");
+
+            verify(companyRepository, never()).findById(any());
+            verify(jobApplicationRepository, never()).save(any());
+        }
+
+
+        @Test
+        @DisplayName("Should throw UnauthorizedException when security context has no authentication")
+        void createJobApplication_NotAuthenticated_ThrowsException() {
+            JobApplicationRequest request = new JobApplicationRequest(
+                    companyId,
+                    "Backend Engineer",
+                    "https://stripe.com/jobs/123",
+                    ApplicationStatus.APPLIED,
+                    WorkLocationType.REMOTE,
+                    BigDecimal.valueOf(90000),
+                    BigDecimal.valueOf(120000),
+                    "USD",
+                    LocalDate.of(2026, 9, 1)
+            );
+
+            when(securityContext.getAuthentication()).thenReturn(null);
+
+            assertThatThrownBy(() -> jobApplicationService.createJobApplication(request))
+                    .isInstanceOf(UnauthorizedException.class)
+                    .hasMessageContaining("User is not authenticated");
+
+            verify(jobApplicationRepository, never()).save(any());
+        }
+
     }
-
-    @Test
-    @DisplayName("Should throw InvalidSalaryRangeException when salaryMin exceeds salaryMax")
-    void createJobApplication_InvalidSalaryRange_throwsException(){
-        JobApplicationRequest request = new JobApplicationRequest(
-                companyId,
-                "Backend Engineer",
-                "https://stripe.com/jobs/123",
-                ApplicationStatus.APPLIED,
-                WorkLocationType.REMOTE,
-                BigDecimal.valueOf(150000), // salaryMin > salaryMax
-                BigDecimal.valueOf(100000),
-                "USD",
-                LocalDate.of(2026, 9, 1)
-        );
-
-        assertThatThrownBy(() -> jobApplicationService.createJobApplication(request))
-                .isInstanceOf(InvalidSalaryRangeException.class)
-                .hasMessageContaining("Minimum salary cannot exceed maximum salary");
-
-        verify(companyRepository, never()).findById(any());
-        verify(jobApplicationRepository, never()).save(any());
-    }
-
-
-    @Test
-    @DisplayName("Should throw UnauthorizedException when security context has no authentication")
-    void createJobApplication_NotAuthenticated_ThrowsException() {
-        JobApplicationRequest request = new JobApplicationRequest(
-                companyId,
-                "Backend Engineer",
-                "https://stripe.com/jobs/123",
-                ApplicationStatus.APPLIED,
-                WorkLocationType.REMOTE,
-                BigDecimal.valueOf(90000),
-                BigDecimal.valueOf(120000),
-                "USD",
-                LocalDate.of(2026, 9, 1)
-        );
-
-        when(securityContext.getAuthentication()).thenReturn(null);
-
-        assertThatThrownBy(() -> jobApplicationService.createJobApplication(request))
-                .isInstanceOf(UnauthorizedException.class)
-                .hasMessageContaining("User is not authenticated");
-
-        verify(jobApplicationRepository, never()).save(any());
-    }
-
     @Nested
     @DisplayName("Delete Job Application Tests")
     class DeleteJobApplicationTests{
@@ -224,6 +225,35 @@ public class JobApplicationServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("Update Job Application Tests")
+    class UpdateJobApplicationTests{
+        @Test
+        @DisplayName("Should update application and assign new company when companyId changes.")
+        void editJobApplication_changeCompanyId_returnsJobApplicationResponse(){
+            mockAuthenticatedUser();
+            UUID newCompanyId = UUID.randomUUID();
+            Company newCompany = new Company("Amazon", "https://amazon.com/careers", "Tech", "Seattle");
+            newCompany.setId(newCompanyId);
+
+            JobApplicationRequest request = new JobApplicationRequest(
+                    newCompanyId, "Backend Engineer", "https://stripe.com/jobs/123",
+                    ApplicationStatus.APPLIED, WorkLocationType.REMOTE,
+                    BigDecimal.valueOf(90000), BigDecimal.valueOf(120000),
+                    "USD", LocalDate.of(2026, 9, 1));
+
+            when(jobApplicationRepository.findByIdAndUserId(applicationId, currentUserId))
+                    .thenReturn(Optional.of(sampleApplication));
+            when(companyRepository.findById(newCompanyId)).thenReturn(Optional.of(newCompany));
+            when(jobApplicationRepository.save(any(JobApplication.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            JobApplicationResponse response = jobApplicationService.editJobApplication(applicationId, request);
+
+            assertThat(response.company().id()).isEqualTo(newCompanyId);
+            verify(companyRepository).findById(newCompanyId);
+
+        }
+    }
     @Nested
     @DisplayName("Read and Tenant Isolation Tests")
     class ReadJobApplicationTests {
