@@ -253,7 +253,33 @@ public class JobApplicationServiceTest {
             verify(companyRepository).findById(newCompanyId);
 
         }
+
+        @Test
+        @DisplayName("Should fail update when application belong to another user")
+        void editJobApplication_UnauthorizedTenant_ThrowsException(){
+            mockAuthenticatedUser();
+            JobApplicationRequest request = new JobApplicationRequest(
+                    companyId,
+                    "Updated Title",
+                    "https://example.com",
+                    ApplicationStatus.OFFER_RECEIVED,
+                    WorkLocationType.REMOTE,
+                    BigDecimal.valueOf(100000),
+                    BigDecimal.valueOf(120000),
+                    "USD",
+                    LocalDate.now()
+            );
+
+            when(jobApplicationRepository.findByIdAndUserId(applicationId, currentUserId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> jobApplicationService.editJobApplication(applicationId, request))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
+            verify(jobApplicationRepository, never()).save(any());
+        }
     }
+
+
     @Nested
     @DisplayName("Read and Tenant Isolation Tests")
     class ReadJobApplicationTests {
