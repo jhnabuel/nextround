@@ -19,10 +19,10 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -152,5 +152,40 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].jobTitle").value("Frontend Developer - React"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/applications/{id} -> Tenant B cannot view Tenant A's application")
+    void getById_CrossTenantAccess_ReturnsNotFound() throws Exception{
+        String application_A_Id = createApplication(userAToken, "DevOps Engineer");
+
+        mockMvc.perform(get("/api/v1/applications/" + application_A_Id).header("Authorization", "Bearer " + userBToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/applications/{id} -> Tenant B cannot delete Tenant A's application")
+    void delete_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception{
+        // Tenant A owns this application
+        String appAId = createApplication(userAToken, "Site Reliability Engineer");
+
+        // Tenant B tries to delete Tenant A's application
+        mockMvc.perform(delete("/api/v1/applications/" + appAId)
+                        .header("Authorization", "Bearer " + userBToken))
+                .andExpect(status().isNotFound());
+
+        // Confirm entity was NOT deleted in database
+        assertThat(jobApplicationRepository.existsById(UUID.fromString(appAId))).isTrue();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/applications/{id} -> Owner deletes own applications; returns 204")
+    void delete_JobApplicationOwner_Success() throws Exception{
+        String appAId = createApplication(userAToken, "Platform Engineer");
+
+        mockMvc.perform(delete("/api/v1/applications/" + appAId)
+                .header("Authorization", "Bearer " + userAToken)).andExpect(status().isNoContent());
+
+        assertThat(jobApplicationRepository.existsById(UUID.fromString(appAId))).isFalse();
     }
 }
