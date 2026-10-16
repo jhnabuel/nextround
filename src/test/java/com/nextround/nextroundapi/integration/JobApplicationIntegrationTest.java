@@ -3,8 +3,10 @@ package com.nextround.nextroundapi.integration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nextround.nextroundapi.BaseIntegrationTest;
 import com.nextround.nextroundapi.dtos.JobApplicationRequest;
+import com.nextround.nextroundapi.dtos.JobApplicationResponse;
 import com.nextround.nextroundapi.dtos.RegisterRequest;
 import com.nextround.nextroundapi.entity.Company;
+import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.enums.WorkLocationType;
 import com.nextround.nextroundapi.repository.CompanyRepository;
@@ -104,7 +106,7 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @DisplayName("POST /api/v1/applications -> should persist job application and link to authenticated user")
-    void createJobApplication_Success() throws Exception{
+    void createJobApplication_Success() throws Exception {
         JobApplicationRequest request = new JobApplicationRequest(
                 savedCompany.getId(),
                 "Junior Software Engineer",
@@ -118,14 +120,15 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         );
 
         mockMvc.perform(post("/api/v1/applications")
-                .header("Authorization", "Bearer " + userAToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))).andExpect(status().isCreated())
+                        .header("Authorization", "Bearer " + userAToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.jobTitle").value("Junior Software Engineer"))
                 .andExpect(jsonPath("$.company.id").value(savedCompany.getId().toString()));
 
         assertThat(jobApplicationRepository.count()).isEqualTo(1);
+
     }
 
     @Test
@@ -187,5 +190,31 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + userAToken)).andExpect(status().isNoContent());
 
         assertThat(jobApplicationRepository.existsById(UUID.fromString(appAId))).isFalse();
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/applications/{id} -> Tenant B cannot edit Tenant A's application")
+    void put_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception{
+        String applicationAId = createApplication(userAToken, "Data Engineer");
+
+        JobApplicationRequest requestHijack = new JobApplicationRequest(savedCompany.getId(),
+                "Hijacked Title",
+                "https://canva.com/careers/x",
+                ApplicationStatus.APPLIED,
+                WorkLocationType.REMOTE,
+                BigDecimal.valueOf(1),
+                BigDecimal.valueOf(2),
+                "PHP",
+                LocalDate.now());
+
+        mockMvc.perform(put("/api/v1/applications/" + applicationAId)
+                .header("Authorization", "Bearer " + userBToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestHijack))).andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/v1/applications/" + applicationAId)
+                        .header("Authorization", "Bearer " + userAToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.jobTitle").value("Data Engineer"));
     }
 }
