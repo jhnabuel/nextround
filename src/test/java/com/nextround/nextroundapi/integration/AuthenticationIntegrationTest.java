@@ -73,7 +73,7 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
                 passwordEncoder.encode("Password123!"),
                 "Test",
                 "User",
-                Role.USER);;
+                Role.USER);
         // Set other required fields (roles, enabled status, etc.)
         userRepository.save(testUser);
         LoginRequest loginRequest = new LoginRequest("candidate@example.com", "Password12");
