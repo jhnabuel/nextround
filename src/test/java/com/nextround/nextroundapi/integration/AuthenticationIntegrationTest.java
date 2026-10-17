@@ -52,7 +52,7 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
                 passwordEncoder.encode("Password123!"),
                 "Test",
                 "User",
-                Role.USER);;
+                Role.USER);
         // Set other required fields (roles, enabled status, etc.)
         userRepository.save(testUser);
         LoginRequest loginRequest = new LoginRequest("candidate@example.com", "Password123!");
@@ -84,12 +84,11 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/applications -> fails with 401 Unauthorized when no token is provided")
+    @DisplayName("GET /api/v1/applications -> fails with 403 Forbidden when no token is provided")
     void accessProtectedEndpoint_NoToken_Fails() throws Exception{
         mockMvc.perform(get("/api/v1/applications"))
                 .andExpect(status().isForbidden());
     }
-
-
+    
 
 }

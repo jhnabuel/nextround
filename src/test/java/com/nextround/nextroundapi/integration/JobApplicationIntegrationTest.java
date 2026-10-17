@@ -127,7 +127,9 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.jobTitle").value("Junior Software Engineer"))
                 .andExpect(jsonPath("$.company.id").value(savedCompany.getId().toString()));
 
-        assertThat(jobApplicationRepository.count()).isEqualTo(1);
+        var savedApp = jobApplicationRepository.findAll().getFirst();
+        assertThat(savedApp.getUser().getEmail()).isEqualTo("candidate.a@nextround.dev");
+        assertThat(savedApp.getCompany().getId()).isEqualTo(savedCompany.getId());
 
     }
 
