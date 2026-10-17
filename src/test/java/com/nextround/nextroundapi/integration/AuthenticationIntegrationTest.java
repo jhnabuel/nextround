@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -82,6 +83,12 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
 
     }
 
+    @Test
+    @DisplayName("GET /api/v1/applications -> fails with 401 Unauthorized when no token is provided")
+    void accessProtectedEndpoint_NoToken_Fails() throws Exception{
+        mockMvc.perform(get("/api/v1/applications"))
+                .andExpect(status().isForbidden());
+    }
 
 
 
