@@ -6,6 +6,7 @@ import com.nextround.nextroundapi.dtos.RegisterRequest;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.Role;
 import com.nextround.nextroundapi.repository.UserRepository;
+import com.nextround.nextroundapi.service.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     @BeforeEach
     void cleanUp(){
@@ -89,6 +93,23 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/v1/applications"))
                 .andExpect(status().isForbidden());
     }
-    
+
+    @Test
+    @DisplayName("GET /api/v1/users -> regular user with ROLE_USER gets 403 Forbidden")
+    void regularUser_CannotAccessUserManagement_ReturnsForbidden() throws Exception {
+        User regularUser = userRepository.save(new User(
+                "candidate@example.com",
+                passwordEncoder.encode("Password123!"),
+                "Regular",
+                "User",
+                Role.USER
+        ));
+
+        String regularUserToken = jwtService.generateToken(regularUser);
+
+        mockMvc.perform(get("/api/v1/users")
+                        .header("Authorization", "Bearer " + regularUserToken))
+                .andExpect(status().isForbidden());
+    }
 
 }
