@@ -25,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.transaction.annotation.Transactional;
+
 
 public class JobApplicationIntegrationTest extends BaseIntegrationTest {
     @Autowired
@@ -101,7 +103,7 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         return responseNode.get("id").asText();
     }
 
-
+    @Transactional
     @Test
     @DisplayName("POST /api/v1/applications -> should persist job application and link to authenticated user")
     void createJobApplication_Success() throws Exception {
