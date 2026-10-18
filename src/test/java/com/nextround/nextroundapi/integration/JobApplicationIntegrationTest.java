@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import org.springframework.transaction.annotation.Transactional;
 
 
 public class JobApplicationIntegrationTest extends BaseIntegrationTest {
@@ -50,7 +49,7 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         userRepository.deleteAllInBatch();
 
         // 1. Seed Company
-        savedCompany = companyRepository.save(
+        savedCompany = companyRepository.saveAndFlush(
                 new Company("Canva", "https://canva.com", "Design & Tech", "Manila, Philippines")
         );
 
