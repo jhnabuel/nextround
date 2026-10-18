@@ -119,15 +119,19 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
                 LocalDate.now()
         );
 
-        mockMvc.perform(post("/api/v1/applications")
+        MvcResult result = mockMvc.perform(post("/api/v1/applications")
                         .header("Authorization", "Bearer " + userAToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.jobTitle").value("Junior Software Engineer"))
-                .andExpect(jsonPath("$.company.id").value(savedCompany.getId().toString()));
+                .andExpect(jsonPath("$.company.id").value(savedCompany.getId().toString()))
+                .andReturn();
 
-        var savedApp = jobApplicationRepository.findAll().getFirst();
+        String rawId = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
+        UUID createdId = UUID.fromString(rawId);
+
+        var savedApp = jobApplicationRepository.findByIdWithDetails(createdId).orElseThrow();
         assertThat(savedApp.getUser().getEmail()).isEqualTo("candidate.a@nextround.dev");
         assertThat(savedApp.getCompany().getId()).isEqualTo(savedCompany.getId());
 
