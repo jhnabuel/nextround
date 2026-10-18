@@ -45,9 +45,9 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         // Clear tables in reverse dependency order
-        jobApplicationRepository.deleteAll();
-        companyRepository.deleteAll();
-        userRepository.deleteAll();
+        jobApplicationRepository.deleteAllInBatch();
+        companyRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
         // 1. Seed Company
         savedCompany = companyRepository.save(
@@ -103,7 +103,6 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         return responseNode.get("id").asText();
     }
 
-    @Transactional
     @Test
     @DisplayName("POST /api/v1/applications -> should persist job application and link to authenticated user")
     void createJobApplication_Success() throws Exception {
