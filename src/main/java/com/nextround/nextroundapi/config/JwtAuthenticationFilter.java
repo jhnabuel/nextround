@@ -11,6 +11,7 @@ import lombok.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -37,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
 
         // 1. Guard clause: check for Bearer token presence
-        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -45,31 +46,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
         final String userEmail;
 
-        try{
+        try {
             userEmail = jwtService.extractUsername(jwt);
-        }catch (Exception e){
+        } catch (Exception e) {
             filterChain.doFilter(request, response);
             return;
         }
 
         // 2. Validate token only if user isn't already authenticated in current thread
-        if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserDetails userDetails = this.customUserDetailsService.loadUserByUsername(userEmail);
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                UserDetails userDetails = this.customUserDetailsService.loadUserByUsername(userEmail);
 
-            if(jwtService.isTokenValid(jwt, userDetails)){
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
 
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // 3. Establish the authenticated principal in the security context
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    // 3. Establish the authenticated principal in the security context
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
+            } catch (UsernameNotFoundException ex) {
+                // User was deleted or cannot be found; ensure context remains empty
+                SecurityContextHolder.clearContext();
             }
         }
-        // 4. Pass execution downstream to subsequent filters and controllers
+
+        // 4. Pass execution downstream; unauthenticated requests hit the 401 entry point
         filterChain.doFilter(request, response);
     }
 }

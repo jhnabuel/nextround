@@ -112,5 +112,27 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("GET /api/v1/applications -> token for deleted user returns 401 Unauthorized")
+    void protectedEndpoint_tokenForDeletedUser_returns401() throws Exception {
+        // 1. Persist user and create a valid signed token
+        User ghostUser = userRepository.save(new User(
+                "ghost@nextround.dev",
+                passwordEncoder.encode("Password123!"),
+                "Ghost",
+                "User",
+                Role.USER
+        ));
+        String token = jwtService.generateToken(ghostUser);
+
+        // 2. Delete the user from the database
+        userRepository.delete(ghostUser);
+
+        // 3. Act & Assert: JWT filter/UserDetailsService should fail and return 401
+        mockMvc.perform(get("/api/v1/applications")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+    }
+
 
 }
