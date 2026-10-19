@@ -3,6 +3,7 @@ package com.nextround.nextroundapi.service;
 import com.nextround.nextroundapi.dtos.CompanyRequest;
 import com.nextround.nextroundapi.dtos.CompanyResponse;
 import com.nextround.nextroundapi.entity.Company;
+import com.nextround.nextroundapi.exception.CompanyAlreadyExistsException;
 import com.nextround.nextroundapi.exception.CompanyHasLinkedApplicationsException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.mapper.CompanyMapper;
@@ -13,9 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -42,11 +41,25 @@ public class CompanyService {
         return companyRepository.findAll(pageable).map(CompanyMapper::toDto);
     }
 
-    public CompanyResponse addCompany(CompanyRequest requestDTO){
-        Company newCompany = new Company(requestDTO.companyName(), requestDTO.websiteUrl(), requestDTO.industry(), requestDTO.location());
-        Company savedCompany = companyRepository.save(newCompany);
+    @Transactional
+    public CompanyResponse addCompany(CompanyRequest request){
+        String trimmedName = request.companyName().trim();
+
+        if (companyRepository.existsByCompanyNameIgnoreCase(trimmedName)) {
+            throw new CompanyAlreadyExistsException("Company already exists with name: " + trimmedName);
+        }
+
+        Company company = new Company(
+                trimmedName,
+                request.websiteUrl() != null ? request.websiteUrl().trim() : null,
+                request.industry() != null ? request.industry().trim() : null,
+                request.location() != null ? request.location().trim() : null
+        );
+
+        Company savedCompany = companyRepository.save(company);
         return CompanyMapper.toDto(savedCompany);
     }
+
 
     public CompanyResponse editCompany(UUID id, CompanyRequest request){
         Company companyToBeEdited = getCompanyByIdInternal(id);

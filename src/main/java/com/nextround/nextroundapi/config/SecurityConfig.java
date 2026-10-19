@@ -44,8 +44,16 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+
+                        // User Management (ADMIN only)
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasRole("ADMIN")
+
+                        // Company Management: PUT & DELETE restricted to ADMIN
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/companies/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/companies/**").hasRole("ADMIN")
+
+                        // GET and POST /api/v1/companies/** fall through to authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
