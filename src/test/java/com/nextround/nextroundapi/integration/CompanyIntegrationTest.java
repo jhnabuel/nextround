@@ -104,7 +104,7 @@ public class CompanyIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/companies/{id} -> regular user gets 403 Forbidden")
+    @DisplayName("PATCH /api/v1/companies/{id} -> regular user gets 403 Forbidden")
     void updateCompany_RegularUser_ReturnsForbidden() throws Exception {
         CompanyRequest updateRequest = new CompanyRequest("Canva Inc.", "https://canva.com", "Design", "Manila");
 
@@ -124,11 +124,11 @@ public class CompanyIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/companies/{id} -> admin user succeeds (200 OK)")
+    @DisplayName("PATCH /api/v1/companies/{id} -> admin user succeeds (200 OK)")
     void updateCompany_AdminUser_Success() throws Exception {
         CompanyRequest updateRequest = new CompanyRequest("Canva Global", "https://canva.com", "Design & Tech", "Sydney");
 
-        mockMvc.perform(put("/api/v1/companies/" + savedCompany.getId())
+        mockMvc.perform(patch("/api/v1/companies/" + savedCompany.getId())
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
