@@ -95,10 +95,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleExistingCompanyException(CompanyAlreadyExistsException exception){
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("status", HttpStatus.CONFLICT.value());
         body.put("message", exception.getMessage());
 
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
 }

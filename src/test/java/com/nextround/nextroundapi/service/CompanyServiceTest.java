@@ -4,11 +4,13 @@ package com.nextround.nextroundapi.service;
 import com.nextround.nextroundapi.dtos.CompanyRequest;
 import com.nextround.nextroundapi.dtos.CompanyResponse;
 import com.nextround.nextroundapi.entity.Company;
+import com.nextround.nextroundapi.exception.CompanyAlreadyExistsException;
 import com.nextround.nextroundapi.exception.CompanyHasLinkedApplicationsException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import org.checkerframework.checker.units.qual.C;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -78,6 +81,20 @@ public class CompanyServiceTest {
         // Verify
         verify(companyRepository, times(1)).save(any(Company.class));
     }
+
+    @Test
+    @DisplayName("createCompany -> throws CompanyAlreadyExistsException when company name exists (case-insensitive)")
+    void createCompany_DuplicateName_ThrowsException() {
+        CompanyRequest request = new CompanyRequest("google", "https://google.com", "Tech", "Mountain View, CA");
+        when(companyRepository.existsByCompanyNameIgnoreCase("google")).thenReturn(true);
+
+        assertThatThrownBy(() -> companyService.addCompany(request))
+                .isInstanceOf(CompanyAlreadyExistsException.class)
+                .hasMessageContaining("Company already exists with name: google");
+
+        verify(companyRepository, never()).save(any(Company.class));
+    }
+
     @Test
     public void deleteCompany_whenCompanyHasNoLinkedApplications_deletesCompany(){
         UUID companyId = UUID.randomUUID();
