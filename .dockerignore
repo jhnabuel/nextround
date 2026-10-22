@@ -1,0 +1,35 @@
+# --- Build Outputs ---
+target/
+build/
+out/
+*.jar
+*.war
+
+# --- IDEs and Text Editors ---
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# --- Version Control ---
+.git/
+.gitignore
+.gitattributes
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Docker & CI/CD ---
+Dockerfile
+docker-compose.yml
+.github/
+.gitlab-ci.yml
+
+# --- Logs & Sensitive Data ---
+*.log
+.env
