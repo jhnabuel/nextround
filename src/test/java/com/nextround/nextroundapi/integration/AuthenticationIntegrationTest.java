@@ -169,4 +169,32 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    @DisplayName("Protected endpoint rejects malformed JWT with 401")
+    void protectedEndpoint_malformedToken_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/applications")
+                        .header("Authorization", "Bearer invalid.token.value"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Protected endpoint rejects invalid JWT signature with 401")
+    void protectedEndpoint_invalidSignature_returns401() throws Exception {
+        User user = userRepository.save(new User(
+                "candidate@example.com",
+                passwordEncoder.encode("Password123!"),
+                "Test",
+                "User",
+                Role.USER
+        ));
+
+        String token = jwtService.generateToken(user);
+        String tamperedToken = token.substring(0, token.length() - 1)
+                + (token.endsWith("a") ? "b" : "a");
+
+        mockMvc.perform(get("/api/v1/applications")
+                        .header("Authorization", "Bearer " + tamperedToken))
+                .andExpect(status().isUnauthorized());
+    }
 }
