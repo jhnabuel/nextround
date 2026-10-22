@@ -12,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -49,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (Exception e) {
-            filterChain.doFilter(request, response);
+            sendUnauthorized(response);
             return;
         }
 
@@ -58,7 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 UserDetails userDetails = this.customUserDetailsService.loadUserByUsername(userEmail);
 
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                if (jwtService.isTokenValid(jwt, userDetails)
+                        && userDetails.isEnabled()
+                        && userDetails.isAccountNonLocked()
+                        && userDetails.isAccountNonExpired()
+                        && userDetails.isCredentialsNonExpired()) {
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -70,13 +73,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // 3. Establish the authenticated principal in the security context
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
+                else {
+                    sendUnauthorized(response);
+                    return;
+                }
             } catch (UsernameNotFoundException ex) {
                 // User was deleted or cannot be found; ensure context remains empty
-                SecurityContextHolder.clearContext();
+                sendUnauthorized(response);
+                return;
             }
         }
 
         // 4. Pass execution downstream; unauthenticated requests hit the 401 entry point
         filterChain.doFilter(request, response);
+    }
+
+    private void sendUnauthorized(HttpServletResponse response)
+            throws IOException {
+        SecurityContextHolder.clearContext();
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
     }
 }
