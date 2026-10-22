@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import jakarta.annotation.PostConstruct;
+import java.util.Base64;
 
 @Service
 public class JwtService {
@@ -83,5 +85,37 @@ public class JwtService {
     private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes); // Returns SecretKey instead of raw Key
+    }
+
+    @PostConstruct
+    private void validateJwtConfiguration() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT secret key must be configured"
+            );
+        }
+
+        if (jwtExpiration <= 0) {
+            throw new IllegalStateException(
+                    "JWT expiration time must be positive"
+            );
+        }
+
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secretKey);
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException(
+                    "JWT secret key must be valid Base64",
+                    ex
+            );
+        }
+
+        // HS256 requires at least 256 bits (32 bytes).
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "JWT secret key must contain at least 32 decoded bytes"
+            );
+        }
     }
 }
