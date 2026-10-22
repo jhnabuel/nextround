@@ -57,20 +57,22 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**", "/actuator/health", "/error").permitAll()
 
-                        // User Management: ALL methods restricted to ADMIN
+                        // 1. Current user self-service: Authenticated (USER or ADMIN)
+                        .requestMatchers("/api/v1/users/me/**").authenticated()
+
+                        // 2. Admin User Management: ALL other /users/** methods restricted to ADMIN
                         .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
 
-                        // Company Management: PUT, PATCH, DELETE restricted to ADMIN
+                        // 3. Company Management: Mutations restricted to ADMIN
                         .requestMatchers(HttpMethod.PUT, "/api/v1/companies/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/companies/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/companies/**").hasRole("ADMIN")
 
-                        .requestMatchers("/api/v1/applications/**")
-                        .authenticated()
-                        .requestMatchers("/api/v1/companies/**")
-                        .authenticated()
+                        // 4. Authenticated reads/writes for applications and companies
+                        .requestMatchers("/api/v1/applications/**").authenticated()
+                        .requestMatchers("/api/v1/companies/**").authenticated()
 
-                        // Everything else (GET/POST /companies, /applications/**) requires authentication
+                        // 5. Default-deny
                         .anyRequest().denyAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
