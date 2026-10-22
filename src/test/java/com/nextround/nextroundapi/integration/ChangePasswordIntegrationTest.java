@@ -14,8 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -94,5 +93,16 @@ public class ChangePasswordIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(newLoginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/users/me -> returns authenticated user profile details")
+    void getCurrentUserProfile_Success() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me")
+                        .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(userEmail))
+                .andExpect(jsonPath("$.firstName").value("Candidate"))
+                .andExpect(jsonPath("$.lastName").value("User"));
     }
 }

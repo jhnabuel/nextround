@@ -110,4 +110,17 @@ public class UserService {
         currentUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(currentUser);
     }
+
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUserProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("User is not authenticated.");
+        }
+
+        User currentUser = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
+
+        return UserMapper.toDto(currentUser);
+    }
 }

@@ -43,6 +43,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUserProfile() {
+        return ResponseEntity.ok(userService.getCurrentUserProfile());
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id,
                                                    @Valid @RequestBody UserRequest userRequest){
