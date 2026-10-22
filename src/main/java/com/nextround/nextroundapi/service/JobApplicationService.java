@@ -88,6 +88,17 @@ public class JobApplicationService {
                 .map(JobApplicationMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public Page<JobApplicationResponse> getApplicationsByCompanyAndStatus(
+            UUID companyId,
+            ApplicationStatus status,
+            Pageable pageable) {
+        User currentUser = getAuthenticatedUser();
+        return jobApplicationRepository
+                .findByCompanyIdAndStatusAndUserId(companyId, status, currentUser.getId(), pageable)
+                .map(JobApplicationMapper::toDto);
+    }
+
 
     @Transactional
     public JobApplicationResponse createJobApplication(JobApplicationRequest jobApplicationRequest){

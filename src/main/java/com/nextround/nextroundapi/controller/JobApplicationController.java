@@ -43,6 +43,9 @@ public class JobApplicationController {
             @RequestParam(required = false) UUID companyId,
             @PageableDefault(size = 15, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
+        if (companyId != null && status != null) {
+            return ResponseEntity.ok(jobApplicationService.getApplicationsByCompanyAndStatus(companyId, status, pageable));
+        }
         if (companyId != null) {
             return ResponseEntity.ok(jobApplicationService.getApplicationsByCompanyId(companyId, pageable));
         }

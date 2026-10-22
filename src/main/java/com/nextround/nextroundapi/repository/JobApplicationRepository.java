@@ -30,4 +30,7 @@ public interface JobApplicationRepository extends JpaRepository<JobApplication, 
 
     @Query("SELECT j FROM JobApplication j JOIN FETCH j.user JOIN FETCH j.company WHERE j.id = :id")
     Optional<JobApplication> findByIdWithDetails(@Param("id") UUID id);
+
+    // JobApplicationRepository
+    Page<JobApplication> findByCompanyIdAndStatusAndUserId(UUID companyId, ApplicationStatus status, UUID userId, Pageable pageable);
 }

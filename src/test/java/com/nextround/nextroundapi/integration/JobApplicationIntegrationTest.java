@@ -26,8 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 public class JobApplicationIntegrationTest extends BaseIntegrationTest {
+
     @Autowired
     private JobApplicationRepository jobApplicationRepository;
 
@@ -48,7 +48,7 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         companyRepository.deleteAllInBatch();
         userRepository.deleteAllInBatch();
 
-        // 1. Seed Company
+        // 1. Seed primary company
         savedCompany = companyRepository.saveAndFlush(
                 new Company("Canva", "https://canva.com", "Design & Tech", "Manila, Philippines")
         );
@@ -70,12 +70,13 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         );
     }
 
-    private String registerAndExtractJwt(String email, String password, String firstName, String lastName) throws Exception{
+    private String registerAndExtractJwt(String email, String password, String firstName, String lastName) throws Exception {
         RegisterRequest request = new RegisterRequest(email, password, firstName, lastName);
 
         MvcResult result = mockMvc.perform(post("/api/v1/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))).andExpect(status().isCreated())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
                 .andReturn();
 
         JsonNode responseNode = objectMapper.readTree(result.getResponse().getContentAsString());
@@ -83,20 +84,28 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
     }
 
     private String createApplication(String jwtToken, String title) throws Exception {
-        JobApplicationRequest request = new JobApplicationRequest(savedCompany.getId(),
+        return createApplication(jwtToken, savedCompany, title, ApplicationStatus.APPLIED, WorkLocationType.HYBRID);
+    }
+
+    private String createApplication(String jwtToken, Company company, String title, ApplicationStatus status, WorkLocationType location) throws Exception {
+        JobApplicationRequest request = new JobApplicationRequest(
+                company.getId(),
                 title,
-                "https://canva.com/careers/backend-eng",
-                ApplicationStatus.APPLIED,
-                WorkLocationType.HYBRID,
+                "https://canva.com/careers/sample",
+                status,
+                location,
                 BigDecimal.valueOf(85000),
                 BigDecimal.valueOf(110000),
                 "PHP",
-                LocalDate.now());
+                LocalDate.now()
+        );
 
         MvcResult result = mockMvc.perform(post("/api/v1/applications")
-                .header("Authorization", "Bearer " +jwtToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request))).andExpect(status().isCreated()).andReturn();
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
 
         JsonNode responseNode = objectMapper.readTree(result.getResponse().getContentAsString());
         return responseNode.get("id").asText();
@@ -120,9 +129,12 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         MvcResult result = mockMvc.perform(post("/api/v1/applications")
                         .header("Authorization", "Bearer " + userAToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))).andExpect(status().isCreated())
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNotEmpty())
                 .andExpect(jsonPath("$.jobTitle").value("Junior Software Engineer"))
+                .andExpect(jsonPath("$.applicationStatus").value("APPLIED"))
+                .andExpect(jsonPath("$.workLocation").value("HYBRID"))
                 .andExpect(jsonPath("$.company.id").value(savedCompany.getId().toString()))
                 .andReturn();
 
@@ -132,20 +144,15 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         var savedApp = jobApplicationRepository.findByIdWithDetails(createdId).orElseThrow();
         assertThat(savedApp.getUser().getEmail()).isEqualTo("candidate.a@nextround.dev");
         assertThat(savedApp.getCompany().getId()).isEqualTo(savedCompany.getId());
-
     }
 
     @Test
     @DisplayName("GET /api/v1/applications -> should only return applications belonging to caller")
     void getAllApplications_EnforcesTenantIsolation() throws Exception {
-        // Tenant A creates 2 applications
         createApplication(userAToken, "Backend Developer - Java");
         createApplication(userAToken, "Full-Stack Developer - Next.js");
-
-        // Tenant B creates 1 application
         createApplication(userBToken, "Frontend Developer - React");
 
-        // Act & Assert: Tenant A should see only their 2 items
         mockMvc.perform(get("/api/v1/applications")
                         .header("Authorization", "Bearer " + userAToken))
                 .andExpect(status().isOk())
@@ -153,7 +160,6 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.content[?(@.jobTitle == 'Backend Developer - Java')]").exists())
                 .andExpect(jsonPath("$.content[?(@.jobTitle == 'Full-Stack Developer - Next.js')]").exists());
 
-        // Act & Assert: Tenant B should see only their 1 item
         mockMvc.perform(get("/api/v1/applications")
                         .header("Authorization", "Bearer " + userBToken))
                 .andExpect(status().isOk())
@@ -162,59 +168,88 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/applications/{id} -> Tenant B cannot view Tenant A's application")
-    void getById_CrossTenantAccess_ReturnsNotFound() throws Exception{
-        String application_A_Id = createApplication(userAToken, "DevOps Engineer");
+    @DisplayName("GET /api/v1/applications?companyId={id}&status={status} -> returns matching tenant applications only")
+    void getAllApplications_CombinedCompanyAndStatusFilter_Success() throws Exception {
+        Company secondCompany = companyRepository.saveAndFlush(
+                new Company("GCash", "https://gcash.com", "Fintech", "Taguig, Philippines")
+        );
 
-        mockMvc.perform(get("/api/v1/applications/" + application_A_Id).header("Authorization", "Bearer " + userBToken))
+        // Tenant A targets
+        createApplication(userAToken, savedCompany, "Senior Backend Engineer", ApplicationStatus.INTERVIEWING, WorkLocationType.REMOTE);
+        createApplication(userAToken, savedCompany, "Junior Backend Engineer", ApplicationStatus.APPLIED, WorkLocationType.ON_SITE);
+        createApplication(userAToken, secondCompany, "Lead Systems Engineer", ApplicationStatus.INTERVIEWING, WorkLocationType.HYBRID);
+
+        // Tenant B target (should not leak)
+        createApplication(userBToken, savedCompany, "Security Engineer", ApplicationStatus.INTERVIEWING, WorkLocationType.REMOTE);
+
+        mockMvc.perform(get("/api/v1/applications")
+                        .header("Authorization", "Bearer " + userAToken)
+                        .param("companyId", savedCompany.getId().toString())
+                        .param("status", ApplicationStatus.INTERVIEWING.name()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].jobTitle").value("Senior Backend Engineer"))
+                .andExpect(jsonPath("$.content[0].applicationStatus").value("INTERVIEWING"))
+                .andExpect(jsonPath("$.content[0].workLocation").value("REMOTE"))
+                .andExpect(jsonPath("$.content[0].company.id").value(savedCompany.getId().toString()));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/applications/{id} -> Tenant B cannot view Tenant A's application")
+    void getById_CrossTenantAccess_ReturnsNotFound() throws Exception {
+        String applicationAId = createApplication(userAToken, "DevOps Engineer");
+
+        mockMvc.perform(get("/api/v1/applications/" + applicationAId)
+                        .header("Authorization", "Bearer " + userBToken))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("DELETE /api/v1/applications/{id} -> Tenant B cannot delete Tenant A's application")
-    void delete_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception{
-        // Tenant A owns this application
+    void delete_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception {
         String appAId = createApplication(userAToken, "Site Reliability Engineer");
 
-        // Tenant B tries to delete Tenant A's application
         mockMvc.perform(delete("/api/v1/applications/" + appAId)
                         .header("Authorization", "Bearer " + userBToken))
                 .andExpect(status().isNotFound());
 
-        // Confirm entity was NOT deleted in database
         assertThat(jobApplicationRepository.existsById(UUID.fromString(appAId))).isTrue();
     }
 
     @Test
     @DisplayName("DELETE /api/v1/applications/{id} -> Owner deletes own applications; returns 204")
-    void delete_JobApplicationOwner_Success() throws Exception{
+    void delete_JobApplicationOwner_Success() throws Exception {
         String appAId = createApplication(userAToken, "Platform Engineer");
 
         mockMvc.perform(delete("/api/v1/applications/" + appAId)
-                .header("Authorization", "Bearer " + userAToken)).andExpect(status().isNoContent());
+                        .header("Authorization", "Bearer " + userAToken))
+                .andExpect(status().isNoContent());
 
         assertThat(jobApplicationRepository.existsById(UUID.fromString(appAId))).isFalse();
     }
 
     @Test
     @DisplayName("PUT /api/v1/applications/{id} -> Tenant B cannot edit Tenant A's application")
-    void put_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception{
+    void put_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception {
         String applicationAId = createApplication(userAToken, "Data Engineer");
 
-        JobApplicationRequest requestHijack = new JobApplicationRequest(savedCompany.getId(),
+        JobApplicationRequest requestHijack = new JobApplicationRequest(
+                savedCompany.getId(),
                 "Hijacked Title",
                 "https://canva.com/careers/x",
-                ApplicationStatus.APPLIED,
+                ApplicationStatus.OFFER_RECEIVED,
                 WorkLocationType.REMOTE,
                 BigDecimal.valueOf(1),
                 BigDecimal.valueOf(2),
                 "PHP",
-                LocalDate.now());
+                LocalDate.now()
+        );
 
         mockMvc.perform(put("/api/v1/applications/" + applicationAId)
-                .header("Authorization", "Bearer " + userBToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestHijack))).andExpect(status().isNotFound());
+                        .header("Authorization", "Bearer " + userBToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestHijack)))
+                .andExpect(status().isNotFound());
 
         mockMvc.perform(get("/api/v1/applications/" + applicationAId)
                         .header("Authorization", "Bearer " + userAToken))

@@ -55,19 +55,17 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/actuator/health", "/error").permitAll()
 
-                        // User Management (ADMIN only)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasRole("ADMIN")
+                        // User Management: ALL methods restricted to ADMIN
+                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
 
-                        // Company Management: PUT & DELETE restricted to ADMIN
+                        // Company Management: PUT, PATCH, DELETE restricted to ADMIN
                         .requestMatchers(HttpMethod.PUT, "/api/v1/companies/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/companies/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/companies/**").hasRole("ADMIN")
 
-                        // GET and POST /api/v1/companies/** fall through to authenticated()
-                        .requestMatchers("/actuator/health").permitAll()
+                        // Everything else (GET/POST /companies, /applications/**) requires authentication
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions
@@ -75,6 +73,11 @@ public class SecurityConfig {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
                             response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Full authentication is required to access this resource\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"You do not have permission to access this resource\"}");
                         })
                 )
                 .authenticationProvider(authenticationProvider())
