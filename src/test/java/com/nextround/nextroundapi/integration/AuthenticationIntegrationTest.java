@@ -134,5 +134,39 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @DisplayName("GET /api/v1/users -> ADMIN is authorized")
+    void admin_CanAccessUserManagement() throws Exception {
+        User admin = userRepository.save(new User(
+                "admin@nextround.dev",
+                passwordEncoder.encode("Password123!"),
+                "Admin",
+                "User",
+                Role.ADMIN
+        ));
 
+        String adminToken = jwtService.generateToken(admin);
+
+        mockMvc.perform(get("/api/v1/users")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Unclassified endpoint is denied")
+    void unclassifiedEndpoint_IsDenied() throws Exception {
+        User user = userRepository.save(new User(
+                "candidate@example.com",
+                passwordEncoder.encode("Password123!"),
+                "Test",
+                "User",
+                Role.USER
+        ));
+
+        String token = jwtService.generateToken(user);
+
+        mockMvc.perform(get("/api/v1/unclassified-test")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
 }
