@@ -1,5 +1,6 @@
 package com.nextround.nextroundapi.controller;
 
+import com.nextround.nextroundapi.dtos.ChangePasswordRequest;
 import com.nextround.nextroundapi.dtos.JobApplicationResponse;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService userService;
     private final JobApplicationService jobApplicationService;
@@ -55,4 +56,9 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+        return ResponseEntity.noContent().build();
+    }
 }

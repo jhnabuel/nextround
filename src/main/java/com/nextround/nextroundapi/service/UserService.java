@@ -1,12 +1,14 @@
 package com.nextround.nextroundapi.service;
 
+import com.nextround.nextroundapi.dtos.ChangePasswordRequest;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.Role;
-import com.nextround.nextroundapi.exception.EmailAlreadyExistsException;
-import com.nextround.nextroundapi.exception.ResourceNotFoundException;
+import com.nextround.nextroundapi.exception.*;
 import com.nextround.nextroundapi.repository.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.nextround.nextroundapi.mapper.UserMapper;
@@ -86,5 +88,26 @@ public class UserService {
             throw new ResourceNotFoundException("User not found.");
         }
         userRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordRequest request){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("User is not authenticated.");
+        }
+
+        User currentUser = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
+
+        // Verify current password; throw 400 trigger if invalid
+        if (!passwordEncoder.matches(request.currentPassword(), currentUser.getPassword())) {
+            throw new InvalidCurrentPasswordException("Current password does not match.");
+        }
+
+        // Hash and persist new password
+        currentUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(currentUser);
     }
 }
