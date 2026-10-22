@@ -65,8 +65,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/companies/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/companies/**").hasRole("ADMIN")
 
+                        .requestMatchers("/api/v1/applications/**")
+                        .authenticated()
+                        .requestMatchers("/api/v1/companies/**")
+                        .authenticated()
+
                         // Everything else (GET/POST /companies, /applications/**) requires authentication
-                        .anyRequest().authenticated()
+                        .anyRequest().denyAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
