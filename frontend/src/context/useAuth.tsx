@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 interface User{
-    id: UUID;
+    id: string;
     email: string;
     firstName: string;
     lastName:string;
@@ -23,15 +23,21 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({children}) => {
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        const savedToken = localStorage.getItem('authToken');
-        const savedUser = localStorage.getItem('authUser');
+        try {
+            const savedToken = localStorage.getItem('authToken');
+            const savedUser = localStorage.getItem('authUser');
 
-        if(savedToken && savedUser){
-            setToken(savedToken);
-            setUser(JSON.parse(savedUser));
+            if (savedToken && savedUser) {
+                setToken(savedToken);
+                setUser(JSON.parse(savedUser));
+            }
+        } catch {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authUser');
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
-        }, []);
+    }, []);
 
     const login = (newToken: string, newUser: User) => {
         localStorage.setItem('authToken', newToken);
