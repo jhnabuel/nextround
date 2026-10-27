@@ -3,7 +3,7 @@ import AppLayout from "../layouts/AppLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import  DashboardPage  from "../pages/DashboardPage";
 import  NotFoundPage  from "../pages/NotFoundPage";
-import  ApplicationsPage  from "../pages/ApplicationsPage";
+import  ApplicationsPage  from "../features/applications/pages/ApplicationsPage";
 import  ProfilePage  from "../pages/ProfilePage";
 import  LoginPage  from "../pages/LoginPage";
 import  RegisterPage  from "../pages/RegisterPage";

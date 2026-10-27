@@ -1,6 +1,4 @@
-
-
-export type PriorityLevel = "LOW" | "MEDIUM" | "HIGH";
+import type { ApplicationStatus, WorkLocationType } from "./application.types";
 
 export interface KanbanApplication {
     id: string;
@@ -13,7 +11,6 @@ export interface KanbanApplication {
     salaryCurrency?: string;
     appliedDate?: string;
     status: ApplicationStatus;
-    priority?: PriorityLevel;
 }
 
 export interface ColumnConfig {

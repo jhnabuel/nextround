@@ -1,4 +1,4 @@
-import { ColumnConfig, KanbanApplication } from "../types/kanban.types";
+import type { ColumnConfig, KanbanApplication } from "../types/kanban.types";
 import { ApplicationCard } from "./ApplicationCard";
 
 interface KanbanColumnProps {
