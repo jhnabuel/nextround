@@ -181,7 +181,7 @@ export default function ApplicationsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                     <select
                         value={selectedStatus}
-                        onChange={(event) => setSelectedStatus(event.target.value)}
+                        onChange={(event) => setSelectedStatus(event.target.value as StatusFilter)}
                         aria-label="Filter by application status"
                         className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/20 cursor-pointer"
                     >

@@ -1,4 +1,4 @@
-import type { ApplicationStatus, WorkLocationType, JobApplicationResponse } from "./application.types";
+import type { ApplicationStatus, WorkLocationType} from "./application.types";
 
 export interface KanbanApplication {
     id: string;

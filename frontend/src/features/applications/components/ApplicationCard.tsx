@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, MapPin, Building2 } from "lucide-react";
+import { Calendar, MapPin, Building2 } from "lucide-react";
 import type { KanbanApplication } from "../types/kanban.types";
 import { formatSalaryRange, formatDate } from "../../../lib/formatters";
 
@@ -65,7 +65,6 @@ export function ApplicationCard({ application, onClick }: ApplicationCardProps) 
             <div className="pt-2.5 border-t border-[#E2E8F0] flex items-center justify-between text-[12px] text-[#64748B]">
                 {formattedSalary ? (
                     <div className="flex items-center gap-1 font-medium text-[#2E3532]">
-                        <DollarSign className="w-3.5 h-3.5 text-[#7E9181]" />
                         <span>{formattedSalary}</span>
                     </div>
                 ) : (
