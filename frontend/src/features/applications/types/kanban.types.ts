@@ -1,4 +1,4 @@
-import type { ApplicationStatus, WorkLocationType } from "./application.types";
+import type { ApplicationStatus, WorkLocationType, JobApplicationResponse } from "./application.types";
 
 export interface KanbanApplication {
     id: string;
@@ -10,6 +10,7 @@ export interface KanbanApplication {
     salaryMax?: number;
     salaryCurrency?: string;
     appliedDate?: string;
+    createdAt?:string;
     status: ApplicationStatus;
 }
 

@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import type { KanbanApplication } from "../types/kanban.types";
 import { KanbanBoard } from "../components/KanbanBoard";
 
+type StatusFilter = KanbanApplication["status"] | "ALL";
+
 const STATUS_OPTIONS = [
     { value: "ALL", label: "All Statuses" },
     { value: "WISHLIST", label: "Wishlist" },
@@ -51,7 +53,8 @@ const MOCK_APPLICATIONS: KanbanApplication[] = [
         salaryMax: 85000,
         salaryCurrency: "PHP",
         appliedDate: "2026-10-20",
-        status: "OFFER_RECEIVED",
+        status: "WISHLIST",
+        createdAt: "2026-10-01"
     },
     {
         id: "app-4",
@@ -62,6 +65,7 @@ const MOCK_APPLICATIONS: KanbanApplication[] = [
         salaryMax: 100000,
         salaryCurrency: "USD",
         status: "WISHLIST",
+        createdAt: "2026-10-12"
     },
     {
         id: "app-5",
@@ -81,20 +85,21 @@ const MOCK_APPLICATIONS: KanbanApplication[] = [
         salaryMax: 130000,
         salaryCurrency: "USD",
         appliedDate: "2026-10-02",
-        status: "GHOSTED",
+        status: "WISHLIST",
+        createdAt: "2026-10-03"
     },
 ];
 
 export default function ApplicationsPage() {
     const [applications] = useState<KanbanApplication[]>(MOCK_APPLICATIONS);
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("ALL");
+    const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL")
     const [sortBy, setSortBy] = useState("createdAt,desc");
 
     const filteredApplications = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
         return applications
             .filter((app) => {
-                const query = searchQuery.trim().toLowerCase();
                 const matchesSearch =
                     !query ||
                     app.jobTitle.toLowerCase().includes(query) ||
@@ -106,11 +111,11 @@ export default function ApplicationsPage() {
                 return matchesSearch && matchesStatus;
             })
             .sort((a, b) => {
+                if (sortBy === 'createdAt,desc'){
+                    return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+                }
                 if (sortBy === "appliedDate,desc") {
-                    return (
-                        new Date(b.appliedDate ?? 0).getTime() -
-                        new Date(a.appliedDate ?? 0).getTime()
-                    );
+                    return (b.appliedDate ?? "").localeCompare(a.appliedDate ?? "");
                 }
                 if (sortBy === "salaryMax,desc") {
                     return (b.salaryMax ?? 0) - (a.salaryMax ?? 0);
