@@ -1,3 +1,4 @@
+import type React from "react";
 import { Calendar, MapPin, Building2 } from "lucide-react";
 import type { KanbanApplication } from "../types/kanban.types";
 import { formatSalaryRange, formatDate } from "../../../lib/formatters";
@@ -29,12 +30,22 @@ export function ApplicationCard({ application, onClick }: ApplicationCardProps) 
     const formattedSalary = formatSalaryRange(salaryMin, salaryMax, salaryCurrency);
     const formattedDate = formatDate(appliedDate);
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick?.(id);
+        }
+    };
+
     return (
         <article
+            tabIndex={0}
+            role="button"
+            aria-label={`${jobTitle} at ${companyName}`}
             onClick={() => onClick?.(id)}
-            className="group relative bg-white border border-[#E2E8F0] rounded-[10px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-[#7E9181] hover:shadow-[0_2px_8px_rgba(46,53,50,0.08)] transition-all duration-150 cursor-pointer select-none"
+            onKeyDown={handleKeyDown}
+            className="group relative bg-white border border-[#E2E8F0] rounded-[10px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-[#7E9181] hover:shadow-[0_2px_8px_rgba(46,53,50,0.08)] transition-all duration-150 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2"
         >
-            {/* Header: Company Name */}
             <div className="flex items-center gap-1.5 mb-1.5 min-w-0 text-[#64748B]">
                 <Building2 className="w-3.5 h-3.5 shrink-0 text-[#7E9181]" />
                 <span className="text-[13px] font-medium text-[#64748B] truncate">
@@ -42,12 +53,10 @@ export function ApplicationCard({ application, onClick }: ApplicationCardProps) 
         </span>
             </div>
 
-            {/* Main Title */}
             <h4 className="text-[15px] font-semibold text-[#1E293B] group-hover:text-[#2E3532] leading-snug line-clamp-2 mb-2.5">
                 {jobTitle}
             </h4>
 
-            {/* Badges: Work Arrangement & Location */}
             <div className="flex flex-wrap items-center gap-1.5 mb-3">
         <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F1F5F3] text-[#2E3532] border border-[#E2E8F0]">
           {WORK_LOCATION_LABELS[workLocation]}
@@ -61,7 +70,6 @@ export function ApplicationCard({ application, onClick }: ApplicationCardProps) 
                 )}
             </div>
 
-            {/* Footer: Dynamic Currency Salary & Localized Date */}
             <div className="pt-2.5 border-t border-[#E2E8F0] flex items-center justify-between text-[12px] text-[#64748B]">
                 {formattedSalary ? (
                     <div className="flex items-center gap-1 font-medium text-[#2E3532]">
