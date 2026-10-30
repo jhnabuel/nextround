@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 
 import type { KanbanApplication } from "../types/kanban.types";
 import { KanbanBoard } from "../components/KanbanBoard";
+import { PageContainer } from "../../../components/layout/PageContainer";
 
 type StatusFilter = KanbanApplication["status"] | "ALL";
 
@@ -133,7 +134,7 @@ export default function ApplicationsPage() {
     };
 
     return (
-        <div className="flex h-full min-h-0 flex-col gap-4">
+        <PageContainer fluid={true} className="gap-4">
             {/* 1. Header */}
             <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
                 <div>
@@ -215,6 +216,6 @@ export default function ApplicationsPage() {
                     onCardClick={handleCardClick}
                 />
             </div>
-        </div>
+        </PageContainer>
     );
 }
