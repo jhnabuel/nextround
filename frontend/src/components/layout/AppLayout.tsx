@@ -1,13 +1,6 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import AppSidebar from "./AppSidebar"
 import AppHeader from "./AppHeader"
-
-const navLinks = [
-    { name: "Dashboard", to: "/dashboard" },
-    { name: "Applications", to: "/applications" },
-    { name: "Companies", to: "/companies" },
-    { name: "Profile", to: "/profile" },
-];
 
 export default function AppLayout() {
     return (
