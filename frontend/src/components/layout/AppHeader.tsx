@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
-import { User, LogOut, ChevronDown } from "lucide-react";
+import { User, LogOut, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -10,22 +10,23 @@ const ROUTE_TITLES: Record<string, string> = {
     "/profile": "Profile",
 };
 
-export function AppHeader() {
+interface AppHeaderProps {
+    onOpenMobileSidebar: () => void;
+}
+
+export function AppHeader({ onOpenMobileSidebar }: AppHeaderProps) {
     const { user } = useAuth();
     const location = useLocation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Derive dynamic page title based on current pathname
     const currentTitle = ROUTE_TITLES[location.pathname] ?? "Workspace";
 
-    // Derive user initials fallback
     const userInitials =
         user?.firstName && user?.lastName
             ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
             : "NR";
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (
@@ -39,7 +40,6 @@ export function AppHeader() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Close dropdown on Escape key
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Escape") {
             setIsDropdownOpen(false);
@@ -52,9 +52,18 @@ export function AppHeader() {
     };
 
     return (
-        <header className="h-16 px-6 border-b border-[#E2E8F0] bg-white flex items-center justify-between shrink-0 select-none">
-            {/* 1. Dynamic Current Page Title */}
+        <header className="h-16 px-4 sm:px-6 border-b border-[#E2E8F0] bg-white flex items-center justify-between shrink-0 select-none">
+            {/* 1. Mobile Hamburger + Page Title */}
             <div className="flex items-center gap-3">
+                <button
+                    type="button"
+                    onClick={onOpenMobileSidebar}
+                    aria-label="Open sidebar menu"
+                    className="md:hidden p-2 -ml-2 rounded-lg text-[#64748B] hover:text-[#2E3532] hover:bg-[#F1F5F3] outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] cursor-pointer"
+                >
+                    <Menu className="w-5 h-5" />
+                </button>
+
                 <h2 className="text-base font-semibold text-[#2E3532] tracking-tight">
                     {currentTitle}
                 </h2>
@@ -70,7 +79,6 @@ export function AppHeader() {
                     aria-label="User account menu"
                     className="flex items-center gap-2.5 p-1.5 rounded-[10px] hover:bg-[#F8FAFC] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2 cursor-pointer"
                 >
-                    {/* Avatar Icon / Circle */}
                     <div className="w-8 h-8 rounded-lg bg-[#2E3532] text-white flex items-center justify-center text-xs font-semibold shadow-xs">
                         {userInitials}
                     </div>
@@ -91,14 +99,12 @@ export function AppHeader() {
                     />
                 </button>
 
-                {/* Dropdown Popover */}
                 {isDropdownOpen && (
                     <div
                         role="menu"
                         aria-orientation="vertical"
                         className="absolute right-0 mt-2 w-56 rounded-[10px] bg-white border border-[#E2E8F0] shadow-md py-1.5 z-50 text-xs animate-in fade-in-0 zoom-in-95 duration-100"
                     >
-                        {/* User Meta Header inside Dropdown */}
                         <div className="px-3 py-2 border-b border-[#E2E8F0] mb-1">
                             <p className="font-semibold text-[#2E3532]">Signed in as</p>
                             <p className="text-[11px] text-[#64748B] truncate mt-0.5">
@@ -106,7 +112,6 @@ export function AppHeader() {
                             </p>
                         </div>
 
-                        {/* Profile Navigation Action */}
                         <Link
                             to="/profile"
                             role="menuitem"
@@ -119,7 +124,6 @@ export function AppHeader() {
 
                         <div className="my-1 border-t border-[#E2E8F0]" />
 
-                        {/* Sign Out Visual Placeholder */}
                         <button
                             type="button"
                             role="menuitem"
