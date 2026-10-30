@@ -1,47 +1,136 @@
-import { LogOut } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useLocation, Link } from "react-router-dom";
+import { User, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 
-export function AppHeader() {
-    const { user, logout } = useAuth();
+const ROUTE_TITLES: Record<string, string> = {
+    "/dashboard": "Dashboard",
+    "/applications": "Applications",
+    "/companies": "Companies",
+    "/profile": "Profile",
+};
 
-    const userInitials = user?.firstName && user?.lastName
-        ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-        : "NR";
+export function AppHeader() {
+    const { user } = useAuth();
+    const location = useLocation();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Derive dynamic page title based on current pathname
+    const currentTitle = ROUTE_TITLES[location.pathname] ?? "Workspace";
+
+    // Derive user initials fallback
+    const userInitials =
+        user?.firstName && user?.lastName
+            ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+            : "NR";
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Close dropdown on Escape key
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Escape") {
+            setIsDropdownOpen(false);
+        }
+    };
+
+    const handleSignOutPlaceholder = () => {
+        console.log("Sign out triggered (visual placeholder)");
+        setIsDropdownOpen(false);
+    };
 
     return (
-        <header className="h-14 px-6 border-b border-[#E2E8F0] bg-white flex items-center justify-between shrink-0">
-            {/* Optional Breadcrumb or Current Context area */}
-            <div className="text-xs font-medium text-[#64748B]">
-                Pipeline Workspace
+        <header className="h-16 px-6 border-b border-[#E2E8F0] bg-white flex items-center justify-between shrink-0 select-none">
+            {/* 1. Dynamic Current Page Title */}
+            <div className="flex items-center gap-3">
+                <h2 className="text-base font-semibold text-[#2E3532] tracking-tight">
+                    {currentTitle}
+                </h2>
             </div>
 
-            {/* User Actions */}
-            <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[#F1F5F3] border border-[#E2E8F0] text-[#2E3532] text-xs font-semibold flex items-center justify-center select-none">
-                        {userInitials}
-                    </div>
-                    {user && (
-                        <div className="hidden sm:block text-left text-xs">
-                            <p className="font-semibold text-[#1E293B] leading-none">
-                                {user.firstName} {user.lastName}
-                            </p>
-                            <p className="text-[#64748B] text-[11px] mt-0.5 leading-none">
-                                {user.email}
-                            </p>
-                        </div>
-                    )}
-                </div>
-
+            {/* 2. User Avatar & Dropdown Menu */}
+            <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
                 <button
                     type="button"
-                    onClick={logout}
-                    title="Sign out"
-                    aria-label="Sign out"
-                    className="p-1.5 rounded-[8px] text-[#64748B] hover:text-[#991B1B] hover:bg-rose-50 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2 cursor-pointer"
+                    onClick={() => setIsDropdownOpen((prev) => !prev)}
+                    aria-expanded={isDropdownOpen}
+                    aria-haspopup="menu"
+                    aria-label="User account menu"
+                    className="flex items-center gap-2.5 p-1.5 rounded-[10px] hover:bg-[#F8FAFC] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2 cursor-pointer"
                 >
-                    <LogOut className="w-4 h-4" />
+                    {/* Avatar Icon / Circle */}
+                    <div className="w-8 h-8 rounded-lg bg-[#2E3532] text-white flex items-center justify-center text-xs font-semibold shadow-xs">
+                        {userInitials}
+                    </div>
+
+                    <div className="hidden sm:flex flex-col text-left">
+            <span className="text-xs font-semibold text-[#2E3532] leading-tight">
+              {user ? `${user.firstName} ${user.lastName}` : "Candidate"}
+            </span>
+                        <span className="text-[11px] text-[#64748B] leading-tight truncate max-w-[140px]">
+              {user?.email ?? "candidate@nextround.dev"}
+            </span>
+                    </div>
+
+                    <ChevronDown
+                        className={`w-3.5 h-3.5 text-[#64748B] transition-transform duration-200 ${
+                            isDropdownOpen ? "rotate-180" : ""
+                        }`}
+                    />
                 </button>
+
+                {/* Dropdown Popover */}
+                {isDropdownOpen && (
+                    <div
+                        role="menu"
+                        aria-orientation="vertical"
+                        className="absolute right-0 mt-2 w-56 rounded-[10px] bg-white border border-[#E2E8F0] shadow-md py-1.5 z-50 text-xs animate-in fade-in-0 zoom-in-95 duration-100"
+                    >
+                        {/* User Meta Header inside Dropdown */}
+                        <div className="px-3 py-2 border-b border-[#E2E8F0] mb-1">
+                            <p className="font-semibold text-[#2E3532]">Signed in as</p>
+                            <p className="text-[11px] text-[#64748B] truncate mt-0.5">
+                                {user?.email ?? "candidate@nextround.dev"}
+                            </p>
+                        </div>
+
+                        {/* Profile Navigation Action */}
+                        <Link
+                            to="/profile"
+                            role="menuitem"
+                            onClick={() => setIsDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-[#2E3532] hover:bg-[#F1F5F3] transition-colors outline-none focus-visible:bg-[#F1F5F3] font-medium"
+                        >
+                            <User className="w-4 h-4 text-[#7E9181]" />
+                            <span>Profile</span>
+                        </Link>
+
+                        <div className="my-1 border-t border-[#E2E8F0]" />
+
+                        {/* Sign Out Visual Placeholder */}
+                        <button
+                            type="button"
+                            role="menuitem"
+                            onClick={handleSignOutPlaceholder}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-[#991B1B] hover:bg-rose-50 transition-colors outline-none focus-visible:bg-rose-50 font-medium text-left cursor-pointer"
+                        >
+                            <LogOut className="w-4 h-4 text-[#991B1B]" />
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                )}
             </div>
         </header>
     );
