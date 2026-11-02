@@ -6,8 +6,8 @@ import DashboardPage from "../pages/DashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import ApplicationsPage from "../features/applications/pages/ApplicationsPage";
 import ProfilePage from "../pages/ProfilePage";
-import LoginPage from "../pages/LoginPage";
-import RegisterPage from "../pages/RegisterPage";
+import LoginPage from "../features/auth/pages/LoginPage";
+import RegisterPage from "../features/auth/pages/RegisterPage";
 
 export const router = createBrowserRouter([
     {
