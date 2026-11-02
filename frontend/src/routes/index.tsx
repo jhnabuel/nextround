@@ -1,12 +1,13 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppLayout from "../components/layout/AppLayout";
 import AuthLayout from "../layouts/AuthLayout";
-import  DashboardPage  from "../pages/DashboardPage";
-import  NotFoundPage  from "../pages/NotFoundPage";
-import  ApplicationsPage  from "../features/applications/pages/ApplicationsPage";
-import  ProfilePage  from "../pages/ProfilePage";
-import  LoginPage  from "../pages/LoginPage";
-import  RegisterPage  from "../pages/RegisterPage";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
+import DashboardPage from "../pages/DashboardPage";
+import NotFoundPage from "../pages/NotFoundPage";
+import ApplicationsPage from "../features/applications/pages/ApplicationsPage";
+import ProfilePage from "../pages/ProfilePage";
+import LoginPage from "../pages/LoginPage";
+import RegisterPage from "../pages/RegisterPage";
 
 export const router = createBrowserRouter([
     {
@@ -14,11 +15,16 @@ export const router = createBrowserRouter([
         element: <Navigate to="/applications" replace />,
     },
     {
-        element: <AppLayout />,
+        element: <ProtectedRoute />,
         children: [
-            { path: "dashboard", element: <DashboardPage /> },
-            { path: "applications", element: <ApplicationsPage /> },
-            { path: "profile", element: <ProfilePage /> },
+            {
+                element: <AppLayout />,
+                children: [
+                    { path: "dashboard", element: <DashboardPage /> },
+                    { path: "applications", element: <ApplicationsPage /> },
+                    { path: "profile", element: <ProfilePage /> },
+                ],
+            },
         ],
     },
     {
