@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../../../context/useAuth";
 import type { LoginRequest } from "../types/auth.types";
 import axios from "axios";
@@ -29,6 +30,7 @@ export function LoginPage() {
 
     const onSubmit = async (data: LoginRequest) => {
         setServerError(null);
+
         try {
             await login(data);
             navigate(from, { replace: true });
@@ -43,80 +45,87 @@ export function LoginPage() {
         }
     };
 
+    const inputClass = (hasError: boolean) =>
+        `h-11 w-full rounded-lg border bg-white px-3.5 text-sm text-[#2E3532]
+        placeholder:text-[#94A3B8] outline-none transition-all
+        ${
+            hasError
+                ? "border-rose-400 focus:ring-2 focus:ring-rose-100"
+                : "border-[#E2E8F0] hover:border-[#CBD5E1] focus:border-[#7E9181] focus:ring-2 focus:ring-[#7E9181]/15"
+        }`;
+
     return (
-        <div className="w-full max-w-md mx-auto">
-            <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold tracking-tight text-[#2E3532]">
+        <>
+            <div className="mb-6">
+                <h1 className="text-2xl font-semibold tracking-tight text-[#2E3532]">
                     Welcome back
                 </h1>
-                <p className="text-xs text-[#64748B] mt-1.5">
-                    Enter your credentials to access your job pipeline
+
+                <p className="mt-2 text-sm text-[#64748B]">
+                    Sign in to continue managing your job search.
                 </p>
             </div>
 
             {serverError && (
-                <div className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
+                <div
+                    role="alert"
+                    className="mb-5 flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700"
+                >
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>{serverError}</span>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                    <label className="block text-xs font-semibold text-[#2E3532] mb-1.5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium text-[#2E3532]">
                         Email address
                     </label>
-                    <div className="relative">
-                        <Mail className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                            type="email"
-                            autoComplete="email"
-                            {...register("email", {
-                                required: "Email is required",
-                                pattern: {
-                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: "Invalid email address",
-                                },
-                            })}
-                            placeholder="candidate@nextround.dev"
-                            className={`w-full pl-9 pr-3 py-2 text-xs rounded-lg border bg-white text-[#2E3532] placeholder:text-[#94A3B8] outline-none transition-colors ${
-                                errors.email
-                                    ? "border-rose-400 focus:ring-2 focus:ring-rose-200"
-                                    : "border-[#E2E8F0] focus:border-[#7E9181] focus:ring-2 focus:ring-[#7E9181]/20"
-                            }`}
-                        />
-                    </div>
+
+                    <input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@example.com"
+                        aria-invalid={!!errors.email}
+                        aria-describedby={errors.email ? "email-error" : undefined}
+                        {...register("email", {
+                            required: "Email is required",
+                            pattern: {
+                                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                message: "Enter a valid email address",
+                            },
+                        })}
+                        className={inputClass(!!errors.email)}
+                    />
+
                     {errors.email && (
-                        <p className="text-[11px] text-rose-600 mt-1">
+                        <p id="email-error" className="text-xs text-rose-600">
                             {errors.email.message}
                         </p>
                     )}
                 </div>
 
-                <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-xs font-semibold text-[#2E3532]">
-                            Password
-                        </label>
-                    </div>
-                    <div className="relative">
-                        <Lock className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                            type="password"
-                            autoComplete="current-password"
-                            {...register("password", {
-                                required: "Password is required",
-                            })}
-                            placeholder="••••••••"
-                            className={`w-full pl-9 pr-3 py-2 text-xs rounded-lg border bg-white text-[#2E3532] placeholder:text-[#94A3B8] outline-none transition-colors ${
-                                errors.password
-                                    ? "border-rose-400 focus:ring-2 focus:ring-rose-200"
-                                    : "border-[#E2E8F0] focus:border-[#7E9181] focus:ring-2 focus:ring-[#7E9181]/20"
-                            }`}
-                        />
-                    </div>
+                <div className="space-y-2">
+                    <label htmlFor="password" className="text-sm font-medium text-[#2E3532]">
+                        Password
+                    </label>
+
+                    <input
+                        id="password"
+                        type="password"
+                        autoComplete="current-password"
+                        placeholder="Enter your password"
+                        aria-invalid={!!errors.password}
+                        aria-describedby={errors.password ? "password-error" : undefined}
+                        {...register("password", {
+                            required: "Password is required",
+                        })}
+                        className={inputClass(!!errors.password)}
+                    />
+
                     {errors.password && (
-                        <p className="text-[11px] text-rose-600 mt-1">
+                        <p id="password-error" className="text-xs text-rose-600">
                             {errors.password.message}
                         </p>
                     )}
@@ -125,29 +134,34 @@ export function LoginPage() {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full mt-2 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-[#2E3532] text-white text-xs font-semibold hover:bg-[#2E3532]/90 disabled:opacity-60 transition-colors cursor-pointer"
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#2E3532] px-4 text-sm font-medium text-white transition-colors hover:bg-[#3D4843] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {isSubmitting ? (
                         <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7E9181]" />
-                            <span>Signing in...</span>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Signing in...
                         </>
                     ) : (
-                        "Sign In"
+                        <>
+                            Sign in
+                            <ArrowRight className="h-4 w-4" />
+                        </>
                     )}
                 </button>
             </form>
 
-            <p className="text-center text-xs text-[#64748B] mt-6">
-                Don't have an account?{" "}
-                <Link
-                    to="/register"
-                    className="font-semibold text-[#2E3532] hover:text-[#7E9181] underline underline-offset-2"
-                >
-                    Create an account
-                </Link>
-            </p>
-        </div>
+            <div className="mt-6 border-t border-[#E2E8F0] pt-6 text-center">
+                <p className="text-sm text-[#64748B]">
+                    Don't have an account?{" "}
+                    <Link
+                        to="/register"
+                        className="font-semibold text-[#2E3532] underline-offset-4 hover:text-[#7E9181] hover:underline"
+                    >
+                        Create an account
+                    </Link>
+                </p>
+            </div>
+        </>
     );
 }
 
