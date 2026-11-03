@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppLayout from "../components/layout/AppLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
+import PublicRoute from "../components/auth/PublicRoute";
+
 import DashboardPage from "../pages/DashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import ApplicationsPage from "../features/applications/pages/ApplicationsPage";
@@ -28,10 +30,15 @@ export const router = createBrowserRouter([
         ],
     },
     {
-        element: <AuthLayout />,
+        element: <PublicRoute/>,
         children: [
-            { path: "login", element: <LoginPage /> },
-            { path: "register", element: <RegisterPage /> },
+            {
+                element: <AuthLayout />,
+                children: [
+                    { path: "login", element: <LoginPage /> },
+                    { path: "register", element: <RegisterPage /> },
+                ],
+            }
         ],
     },
     {
