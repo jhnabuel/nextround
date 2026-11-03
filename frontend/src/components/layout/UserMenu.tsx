@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { User, LogOut, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 
 interface UserMenuProps {
@@ -9,6 +9,7 @@ interface UserMenuProps {
 
 export function UserMenu({ onSignOut }: UserMenuProps) {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +40,7 @@ export function UserMenu({ onSignOut }: UserMenuProps) {
             onSignOut();
         } else {
             logout();
+            navigate("/login", { replace: true });
         }
     };
 
