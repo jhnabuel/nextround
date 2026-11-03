@@ -4,10 +4,10 @@ import { useAuth } from "../context/useAuth";
 import { Loader2 } from "lucide-react";
 
 export default function AuthLayout() {
-    const { token, loading } = useAuth();
+    const { token, isLoading } = useAuth();
 
     // Prevent authentication flicker during initialization
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="min-h-screen w-full flex items-center justify-center bg-[#F8FAFC]">
                 <div className="flex items-center gap-2 text-sm text-[#64748B]">

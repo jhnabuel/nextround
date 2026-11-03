@@ -4,7 +4,7 @@ import type {
     LoginRequest,
     AuthResponse,
     User,
-} from "../types/auth.types";
+} from "../features/auth/types/auth.types";
 
 export const authService = {
     /**
