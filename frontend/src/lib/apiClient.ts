@@ -27,6 +27,14 @@ apiClient.interceptors.response.use(
     (error: AxiosError) => {
         if (error.response?.status === 401) {
             useAuthStore.getState().logout();
+
+            const requestUrl = error.config?.url || "";
+            const isAuthEndpoint = requestUrl.includes("/auth/login") || requestUrl.includes("/auth/register");
+
+            if (!isAuthEndpoint && window.location.pathname !== "/login") {
+                window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+            }
+
         }
         return Promise.reject(error);
     }
