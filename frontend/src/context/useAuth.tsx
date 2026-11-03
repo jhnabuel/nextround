@@ -14,6 +14,8 @@ import type {
     RegisterRequest,
 } from "../features/auth/auth.types";
 
+import { useAuthStore } from "../store/useAuthStore";
+
 export interface User {
     id: string;
     email: string;
@@ -116,9 +118,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth(): AuthContextType {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
+    return useAuthStore();
 }
