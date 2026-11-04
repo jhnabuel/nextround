@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../../../context/useAuth";
 import type { RegisterRequest } from "../types/auth.types";
-import axios from "axios";
 
 export function RegisterPage() {
     const { register: registerUser } = useAuth();

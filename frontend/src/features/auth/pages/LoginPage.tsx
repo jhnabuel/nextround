@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../../../context/useAuth";
 import type { LoginRequest } from "../types/auth.types";
-import axios from "axios";
 import { toast } from "sonner";
 
 export function LoginPage() {
