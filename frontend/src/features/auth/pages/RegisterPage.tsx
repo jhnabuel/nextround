@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../../../context/useAuth";
 import type { RegisterRequest } from "../types/auth.types";
@@ -30,16 +31,12 @@ export function RegisterPage() {
 
         try {
             await registerUser(data);
-            navigate("/applications", { replace: true });
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err) && err.response) {
-                setServerError(
-                    err.response.data?.message ||
-                    "Registration failed. Please check your inputs."
-                );
-            } else {
-                setServerError("Could not complete registration. Please try again.");
-            }
+            toast.success("Account created successfully! Welcome to NextRound.");
+            navigate("/application", { replace: true });
+        } catch (err: any) {
+            const message = err.response?.data?.message || err.message || "Registration failed. Please check your details and try again.";
+            setServerError(message);
+            toast.error(message);
         }
     };
 

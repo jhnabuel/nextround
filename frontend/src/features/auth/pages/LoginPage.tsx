@@ -6,6 +6,7 @@ import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../../../context/useAuth";
 import type { LoginRequest } from "../types/auth.types";
 import axios from "axios";
+import { toast } from "sonner";
 
 export function LoginPage() {
     const { login } = useAuth();
@@ -21,27 +22,26 @@ export function LoginPage() {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
-    } = useForm<LoginRequest>({
-        defaultValues: {
-            email: "",
-            password: "",
-        },
-    });
+    } = useForm<LoginRequest>();
 
     const onSubmit = async (data: LoginRequest) => {
         setServerError(null);
 
         try {
             await login(data);
+            toast.success("Welcome back! Signed in successfully.");
             navigate(from, { replace: true });
-        } catch (err: unknown) {
-            if (axios.isAxiosError(err) && err.response) {
-                setServerError(
-                    err.response.data?.message || "Invalid email or password."
-                );
-            } else {
-                setServerError("Failed to sign in. Please try again.");
-            }
+        } catch (err: any) {
+           let errorMessage = "Invalid email or password. Please try again";
+
+           if(err.response?.status === 401 || err.response?.status === 400){
+               errorMessage = err.response.data?.message || "Incorrect email or password.";
+           } else if (err.response?.data?.message){
+               errorMessage = err.response.data.message;
+           }
+
+           setServerError(errorMessage);
+           toast.error(errorMessage);
         }
     };
 
