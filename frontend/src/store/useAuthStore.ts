@@ -25,34 +25,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // 1. Login State Update
     login: async (credentials: LoginRequest) => {
-        set({ isLoading: true });
-        try {
-            const authData = await authService.login(credentials);
-            localStorage.setItem(TOKEN_KEY, authData.token);
-            set({
-                token: authData.token,
-                user: authData.user,
-                isAuthenticated: true,
-            });
-        } finally {
-            set({ isLoading: false });
-        }
+        // DO NOT touch isLoading here; local isSubmitting handles the button spinner
+        const response = await authService.login(credentials);
+        localStorage.setItem(TOKEN_KEY, response.token);
+        set({
+            token: response.token,
+            user: response.user,
+            isAuthenticated: true,
+        });
     },
 
     // 2. Register State Update
     register: async (payload: RegisterRequest) => {
-        set({ isLoading: true });
-        try {
-            const authData = await authService.register(payload);
-            localStorage.setItem(TOKEN_KEY, authData.token);
-            set({
-                token: authData.token,
-                user: authData.user,
-                isAuthenticated: true,
-            });
-        } finally {
-            set({ isLoading: false });
-        }
+        // DO NOT touch isLoading here; local isSubmitting handles the button spinner
+        const response = await authService.register(payload);
+        localStorage.setItem(TOKEN_KEY, response.token);
+        set({
+            token: response.token,
+            user: response.user,
+            isAuthenticated: true,
+        });
     },
 
     // 3. Logout State Cleanup

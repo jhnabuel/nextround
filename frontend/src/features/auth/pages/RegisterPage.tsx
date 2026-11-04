@@ -31,7 +31,7 @@ export function RegisterPage() {
         try {
             await registerUser(data);
             toast.success("Account created successfully! Welcome to NextRound.");
-            navigate("/application", { replace: true });
+            navigate("/applications", { replace: true });
         } catch (err: any) {
             const message = err.response?.data?.message || err.message || "Registration failed. Please check your details and try again.";
             setServerError(message);

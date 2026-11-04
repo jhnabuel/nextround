@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -11,7 +10,7 @@ export function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [serverError, setServerError] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const from =
         (location.state as { from?: { pathname: string } })?.from?.pathname ||
@@ -24,23 +23,27 @@ export function LoginPage() {
     } = useForm<LoginRequest>();
 
     const onSubmit = async (data: LoginRequest) => {
-        setServerError(null);
+        setErrorMessage(null);
 
         try {
             await login(data);
             toast.success("Welcome back! Signed in successfully.");
             navigate(from, { replace: true });
         } catch (err: any) {
-           let errorMessage = "Invalid email or password. Please try again";
+            const status = err.response?.status;
+            const serverMsg = err.response?.data?.message || err.response?.data?.error;
 
-           if(err.response?.status === 401 || err.response?.status === 400){
-               errorMessage = err.response.data?.message || "Incorrect email or password.";
-           } else if (err.response?.data?.message){
-               errorMessage = err.response.data.message;
-           }
-
-           setServerError(errorMessage);
-           toast.error(errorMessage);
+            if (
+                status === 401 ||
+                status === 403 ||
+                (serverMsg && /authentication/i.test(serverMsg))
+            ) {
+                setErrorMessage("Invalid email or password. Please check your credentials and try again.");
+            } else if (serverMsg && typeof serverMsg === "string") {
+                setErrorMessage(serverMsg);
+            } else {
+                setErrorMessage("Unable to sign in. Please verify your connection or try again later.");
+            }
         }
     };
 
@@ -65,13 +68,10 @@ export function LoginPage() {
                 </p>
             </div>
 
-            {serverError && (
-                <div
-                    role="alert"
-                    className="mb-5 flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700"
-                >
-                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{serverError}</span>
+            {errorMessage && (
+                <div className="mb-5 flex items-center gap-2.5 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700 animate-in fade-in-0 duration-150">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                    <span className="font-medium">{errorMessage}</span>
                 </div>
             )}
 
@@ -86,7 +86,7 @@ export function LoginPage() {
                         type="email"
                         autoComplete="email"
                         placeholder="you@example.com"
-                        aria-invalid={!!errors.email}
+                        aria-invalid={!!errors.email || !!errorMessage}
                         aria-describedby={errors.email ? "email-error" : undefined}
                         {...register("email", {
                             required: "Email is required",
@@ -94,8 +94,9 @@ export function LoginPage() {
                                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                                 message: "Enter a valid email address",
                             },
+                            onChange: () => setErrorMessage(null),
                         })}
-                        className={inputClass(!!errors.email)}
+                        className={inputClass(!!errors.email || !!errorMessage)}
                     />
 
                     {errors.email && (
@@ -115,12 +116,13 @@ export function LoginPage() {
                         type="password"
                         autoComplete="current-password"
                         placeholder="Enter your password"
-                        aria-invalid={!!errors.password}
+                        aria-invalid={!!errors.password || !!errorMessage}
                         aria-describedby={errors.password ? "password-error" : undefined}
                         {...register("password", {
                             required: "Password is required",
+                            onChange: () => setErrorMessage(null),
                         })}
-                        className={inputClass(!!errors.password)}
+                        className={inputClass(!!errors.password || !!errorMessage)}
                     />
 
                     {errors.password && (
@@ -133,16 +135,16 @@ export function LoginPage() {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#2E3532] px-4 text-sm font-medium text-white transition-colors hover:bg-[#3D4843] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#2E3532] px-4 text-sm font-medium text-white transition-colors hover:bg-[#3D4843] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                 >
                     {isSubmitting ? (
                         <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Signing in...
+                            <Loader2 className="h-4 w-4 animate-spin text-[#7E9181]" />
+                            <span>Signing in...</span>
                         </>
                     ) : (
                         <>
-                            Sign in
+                            <span>Sign in</span>
                             <ArrowRight className="h-4 w-4" />
                         </>
                     )}
