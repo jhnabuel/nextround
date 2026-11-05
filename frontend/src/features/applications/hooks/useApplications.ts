@@ -74,4 +74,41 @@ export function useUpdateApplication(){
     });
 }
 
-export
+export function useDeleteApplication(){
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => applicationService.delete(id),
+
+        onMutate: async (deletedId: string) => {
+            await queryClient.cancelQueries({ queryKey: applicationKeys.lists() });
+
+            const previousApps = queryClient.getQueryData<JobApplicationResponse[]>(
+                applicationKeys.lists()
+            );
+
+            if (previousApps){
+                queryClient.setQueryData<JobApplicationResponse[]>(
+                    applicationKeys.lists(),
+                    previousApps.filter((app) => app.id !== deletedId)
+                );
+            }
+
+            return { previousApps };
+        },
+
+        onError: (_err, _id, context) => {
+            // Rollback on failure
+            if (context?.previousApps) {
+                queryClient.setQueryData(applicationKeys.lists(), context.previousApps);
+            }
+            toast.error("Failed to delete application.");
+        },
+        onSuccess: () => {
+            toast.success("Application deleted.");
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
+        },
+    });
+}
