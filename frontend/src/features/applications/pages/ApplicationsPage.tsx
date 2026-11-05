@@ -1,9 +1,12 @@
-import { Plus, Search, ArrowUpDown } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { KanbanApplication } from "../types/kanban.types";
+import type { JobApplicationResponse } from "../types/application.types";
 import { KanbanBoard } from "../components/KanbanBoard";
 import { PageContainer } from "../../../components/layout/PageContainer";
+import { useApplications } from "../hooks/useApplications";
+import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 
 type StatusFilter = KanbanApplication["status"] | "ALL";
 
@@ -19,83 +22,33 @@ const STATUS_OPTIONS = [
     { value: "GHOSTED", label: "Ghosted" },
 ];
 
-const MOCK_APPLICATIONS: KanbanApplication[] = [
-    {
-        id: "app-1",
-        jobTitle: "Junior Software Engineer",
-        companyName: "Canva",
-        location: "Manila, PH",
-        workLocation: "HYBRID",
-        salaryMin: 55000,
-        salaryMax: 75000,
-        salaryCurrency: "PHP",
-        appliedDate: "2026-10-15",
-        status: "INTERVIEWING",
-    },
-    {
-        id: "app-2",
-        jobTitle: "Backend Java Developer",
-        companyName: "Stripe",
-        location: "Singapore",
-        workLocation: "REMOTE",
-        salaryMin: 90000,
-        salaryMax: 120000,
-        salaryCurrency: "USD",
-        appliedDate: "2026-10-18",
-        status: "APPLIED",
-    },
-    {
-        id: "app-3",
-        jobTitle: "Full Stack Engineer (React/Spring)",
-        companyName: "Maya",
-        location: "Taguig, PH",
-        workLocation: "HYBRID",
-        salaryMin: 60000,
-        salaryMax: 85000,
-        salaryCurrency: "PHP",
-        appliedDate: "2026-10-20",
-        status: "WISHLIST",
-        createdAt: "2026-10-01"
-    },
-    {
-        id: "app-4",
-        jobTitle: "Frontend Developer",
-        companyName: "Linear",
-        workLocation: "REMOTE",
-        salaryMin: 80000,
-        salaryMax: 100000,
-        salaryCurrency: "USD",
-        status: "WISHLIST",
-        createdAt: "2026-10-12"
-    },
-    {
-        id: "app-5",
-        jobTitle: "Associate Software Engineer",
-        companyName: "Accenture",
-        location: "Cebu, PH",
-        workLocation: "ON_SITE",
-        appliedDate: "2026-09-28",
-        status: "REJECTED",
-    },
-    {
-        id: "app-6",
-        jobTitle: "Software Engineer I",
-        companyName: "Vercel",
-        workLocation: "REMOTE",
-        salaryMin: 110000,
-        salaryMax: 130000,
-        salaryCurrency: "USD",
-        appliedDate: "2026-10-02",
-        status: "WISHLIST",
-        createdAt: "2026-10-03"
-    },
-];
-
 export default function ApplicationsPage() {
-    const [applications] = useState<KanbanApplication[]>(MOCK_APPLICATIONS);
+    const { data: rawApplications = [], isLoading, isError, error } = useApplications();
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL")
+    const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL");
     const [sortBy, setSortBy] = useState("createdAt,desc");
+
+    // Dialog state for create/edit operations
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [selectedApp, setSelectedApp] = useState<JobApplicationResponse | null>(null);
+
+    // Map backend JobApplicationResponse to KanbanApplication shape
+    const applications = useMemo<KanbanApplication[]>(() => {
+        return rawApplications.map((app) => ({
+            id: app.id,
+            jobTitle: app.jobTitle,
+            companyName: app.company.name,
+            status: app.applicationStatus,
+            workLocation: app.workLocation,
+            salaryMin: app.salaryMin,
+            salaryMax: app.salaryMax,
+            salaryCurrency: app.salaryCurrency,
+            appliedDate: app.appliedDate,
+            jobUrl: app.jobUrl,
+            createdAt: app.createdAt,
+            updatedAt: app.updatedAt,
+        }));
+    }, [rawApplications]);
 
     const filteredApplications = useMemo(() => {
         const query = searchQuery.trim().toLowerCase();
@@ -112,7 +65,7 @@ export default function ApplicationsPage() {
                 return matchesSearch && matchesStatus;
             })
             .sort((a, b) => {
-                if (sortBy === 'createdAt,desc'){
+                if (sortBy === "createdAt,desc") {
                     return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
                 }
                 if (sortBy === "appliedDate,desc") {
@@ -126,11 +79,19 @@ export default function ApplicationsPage() {
     }, [applications, searchQuery, selectedStatus, sortBy]);
 
     const handleOpenAddModal = () => {
-        console.log("Open Add Application modal");
+        setSelectedApp(null);
+        setIsDialogOpen(true);
     };
 
     const handleCardClick = (id: string) => {
-        console.log("Selected application ID:", id);
+        const found = rawApplications.find((app) => app.id === id) || null;
+        setSelectedApp(found);
+        setIsDialogOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setIsDialogOpen(false);
+        setSelectedApp(null);
     };
 
     return (
@@ -143,8 +104,8 @@ export default function ApplicationsPage() {
                             Applications
                         </h1>
                         <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-              {filteredApplications.length} of {applications.length}
-            </span>
+                            {filteredApplications.length} of {applications.length}
+                        </span>
                     </div>
 
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -211,11 +172,29 @@ export default function ApplicationsPage() {
 
             {/* 3. Live Kanban Board Canvas */}
             <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                <KanbanBoard
-                    applications={filteredApplications}
-                    onCardClick={handleCardClick}
-                />
+                {isLoading ? (
+                    <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border bg-card text-muted-foreground">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+                        <span className="text-xs font-medium">Loading applications...</span>
+                    </div>
+                ) : isError ? (
+                    <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-xs text-destructive">
+                        Failed to load applications: {(error as Error)?.message || "Unknown error"}
+                    </div>
+                ) : (
+                    <KanbanBoard
+                        applications={filteredApplications}
+                        onCardClick={handleCardClick}
+                    />
+                )}
             </div>
+
+            {/* 4. Create / Edit Application Dialog */}
+            <ApplicationFormDialog
+                isOpen={isDialogOpen}
+                onClose={handleCloseDialog}
+                initialData={selectedApp}
+            />
         </PageContainer>
     );
 }

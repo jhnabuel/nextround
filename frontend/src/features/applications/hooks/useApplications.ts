@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import { applicationService } from "../../../services/application.service";
+import { applicationKeys } from "../api/applicationKeys";
 
 import type {
     JobApplicationResponse,
@@ -53,7 +54,7 @@ export function useUpdateApplication(){
         mutationFn: ({
             id, payload,
         }: {id: string;
-            payload: JobApplicationRequest;
+            payload: UpdateJobApplicationRequest;
         }) => applicationService.update(id, payload),
         onSuccess: (updatedApp) => {
             // Direct cache write to detail query

@@ -1,4 +1,4 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "../lib/apiClient";
 import type { CompanySummary } from "../features/applications/types/application.types";
 
 export const companyService = {

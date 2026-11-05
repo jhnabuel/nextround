@@ -2,10 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { X, Loader2 } from "lucide-react";
 import { useCompanies } from "../../companies/api/useCompanies";
-import {
-    useCreateApplication,
-    useUpdateApplication,
-} from "../api/useApplications";
+import { useCreateApplication, useUpdateApplication } from "../hooks/useApplications";
 import type {
     JobApplicationResponse,
     CreateJobApplicationRequest,

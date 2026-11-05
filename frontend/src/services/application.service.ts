@@ -1,15 +1,15 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "../lib/apiClient";
 import type {
     JobApplicationResponse,
-    CreateApplicationRequest,
-    UpdateApplicationRequest,
+    CreateJobApplicationRequest,
+    UpdateJobApplicationRequest,
 } from "../features/applications/types/application.types";
 
 export type Application = JobApplicationResponse;
 
 export const applicationService = {
     getAll: async (): Promise<JobApplicationResponse[]> =>{
-        const response = apiClient.get<JobApplicationResponse[]>("/applications");
+        const response = await apiClient.get<JobApplicationResponse[]>("/applications");
         return response.data;
     },
 
@@ -18,17 +18,17 @@ export const applicationService = {
         return response.data;
     },
 
-    create: async (payload: CreateApplicationRequest): Promise<JobApplicationResponse> => {
+    create: async (payload: CreateJobApplicationRequest): Promise<JobApplicationResponse> => {
         const response = await apiClient.post<JobApplicationResponse>("/applications", payload);
         return response.data;
     },
 
-    update: async (id: string, payload: UpdateApplicationRequest): Promise<JobApplicationResponse> => {
-        const response = await apiClient.put<JobApplicationRequest>(`/applications/${id}`, payload);
+    update: async (id: string, payload: UpdateJobApplicationRequest): Promise<JobApplicationResponse> => {
+        const response = await apiClient.put<JobApplicationResponse>(`/applications/${id}`, payload);
         return response.data;
     },
 
-    delete: async (id: string): Promise<JobApplicationResponse> => {
+    delete: async (id: string): Promise<void> => {
        await apiClient.delete(`/applications/${id}`);
     },
 };
