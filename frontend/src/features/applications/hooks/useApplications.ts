@@ -21,6 +21,7 @@ export function useApplication(id: string){
     return useQuery({
         queryKey: applicationKeys.detail(id),
         queryFn: () => applicationService.getById(id),
+        // only fetch if userId exists
         enabled: Boolean(id),
     });
 }
@@ -51,6 +52,26 @@ export function useUpdateApplication(){
     return useMutation({
         mutationFn: ({
             id, payload,
-        }: {id: string; payload: JobApplicationRequest})
-    })
+        }: {id: string;
+            payload: JobApplicationRequest;
+        }) => applicationService.update(id, payload),
+        onSuccess: (updatedApp) => {
+            // Direct cache write to detail query
+            queryClient.setQueryData(
+                applicationKeys.detail(updatedApp.id), updatedApp
+            );
+            // Invalidate lists to keep table/board in sync
+            queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
+            toast.success("Application updated successfully.");
+        },
+        onError: (err: unknown) => {
+            let message = "Failed to update application.";
+            if (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) {
+                message = err.response.data.message;
+            }
+            toast.error(message);
+        },
+    });
 }
+
+export
