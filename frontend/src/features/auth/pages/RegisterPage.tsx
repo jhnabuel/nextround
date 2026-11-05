@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../../../context/useAuth";
 import type { RegisterRequest } from "../types/auth.types";
+import { isAxiosError } from "axios";
 
 export function RegisterPage() {
     const { register: registerUser } = useAuth();
@@ -31,13 +32,20 @@ export function RegisterPage() {
             await registerUser(data);
             toast.success("Account created successfully! Welcome to NextRound.");
             navigate("/applications", { replace: true });
-        } catch (err: any) {
-            const status = err.response?.status;
-            const serverMsg = err.response?.data?.message || err.response?.data?.error;
+        } catch (err: unknown) {
+            let status: number | undefined;
+            let serverMsg: string | undefined;
+
+            if (isAxiosError<{ message?: string; error?: string }>(err)) {
+                status = err.response?.status;
+                serverMsg = err.response?.data?.message || err.response?.data?.error;
+            } else if (err instanceof Error) {
+                serverMsg = err.message;
+            }
 
             if (status === 409 || (serverMsg && /exists|duplicate|registered/i.test(serverMsg))) {
                 setServerError("An account with this email address already exists.");
-            } else if (serverMsg && typeof serverMsg === "string") {
+            } else if (serverMsg) {
                 setServerError(serverMsg);
             } else {
                 setServerError("Registration failed. Please check your details and try again.");

@@ -5,6 +5,7 @@ import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "../../../context/useAuth";
 import type { LoginRequest } from "../types/auth.types";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 
 export function LoginPage() {
     const { login } = useAuth();
@@ -29,9 +30,16 @@ export function LoginPage() {
             await login(data);
             toast.success("Welcome back! Signed in successfully.");
             navigate(from, { replace: true });
-        } catch (err: any) {
-            const status = err.response?.status;
-            const serverMsg = err.response?.data?.message || err.response?.data?.error;
+        } catch (err: unknown) {
+            let status: number | undefined;
+            let serverMsg: string | undefined;
+
+            if (isAxiosError<{ message?: string; error?: string }>(err)) {
+                status = err.response?.status;
+                serverMsg = err.response?.data?.message || err.response?.data?.error;
+            } else if (err instanceof Error) {
+                serverMsg = err.message;
+            }
 
             if (
                 status === 401 ||
@@ -39,7 +47,7 @@ export function LoginPage() {
                 (serverMsg && /authentication/i.test(serverMsg))
             ) {
                 setErrorMessage("Invalid email or password. Please check your credentials and try again.");
-            } else if (serverMsg && typeof serverMsg === "string") {
+            } else if (serverMsg) {
                 setErrorMessage(serverMsg);
             } else {
                 setErrorMessage("Unable to sign in. Please verify your connection or try again later.");
