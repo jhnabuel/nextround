@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -33,9 +32,16 @@ export function RegisterPage() {
             toast.success("Account created successfully! Welcome to NextRound.");
             navigate("/applications", { replace: true });
         } catch (err: any) {
-            const message = err.response?.data?.message || err.message || "Registration failed. Please check your details and try again.";
-            setServerError(message);
-            toast.error(message);
+            const status = err.response?.status;
+            const serverMsg = err.response?.data?.message || err.response?.data?.error;
+
+            if (status === 409 || (serverMsg && /exists|duplicate|registered/i.test(serverMsg))) {
+                setServerError("An account with this email address already exists.");
+            } else if (serverMsg && typeof serverMsg === "string") {
+                setServerError(serverMsg);
+            } else {
+                setServerError("Registration failed. Please check your details and try again.");
+            }
         }
     };
 
@@ -82,11 +88,12 @@ export function RegisterPage() {
                             type="text"
                             autoComplete="given-name"
                             placeholder="John"
-                            aria-invalid={!!errors.firstName}
+                            aria-invalid={!!errors.firstName || !!serverError}
                             {...register("firstName", {
                                 required: "First name is required",
+                                onChange: () => setServerError(null),
                             })}
-                            className={inputClass(!!errors.firstName)}
+                            className={inputClass(!!errors.firstName || !!serverError)}
                         />
 
                         {errors.firstName && (
@@ -106,11 +113,12 @@ export function RegisterPage() {
                             type="text"
                             autoComplete="family-name"
                             placeholder="Doe"
-                            aria-invalid={!!errors.lastName}
+                            aria-invalid={!!errors.lastName || !!serverError}
                             {...register("lastName", {
                                 required: "Last name is required",
+                                onChange: () => setServerError(null),
                             })}
-                            className={inputClass(!!errors.lastName)}
+                            className={inputClass(!!errors.lastName || !!serverError)}
                         />
 
                         {errors.lastName && (
@@ -131,15 +139,16 @@ export function RegisterPage() {
                         type="email"
                         autoComplete="email"
                         placeholder="you@example.com"
-                        aria-invalid={!!errors.email}
+                        aria-invalid={!!errors.email || !!serverError}
                         {...register("email", {
                             required: "Email is required",
                             pattern: {
                                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                                 message: "Enter a valid email address",
                             },
+                            onChange: () => setServerError(null),
                         })}
-                        className={inputClass(!!errors.email)}
+                        className={inputClass(!!errors.email || !!serverError)}
                     />
 
                     {errors.email && (
@@ -159,15 +168,16 @@ export function RegisterPage() {
                         type="password"
                         autoComplete="new-password"
                         placeholder="At least 8 characters"
-                        aria-invalid={!!errors.password}
+                        aria-invalid={!!errors.password || !!serverError}
                         {...register("password", {
                             required: "Password is required",
                             minLength: {
                                 value: 8,
                                 message: "Password must be at least 8 characters",
                             },
+                            onChange: () => setServerError(null),
                         })}
-                        className={inputClass(!!errors.password)}
+                        className={inputClass(!!errors.password || !!serverError)}
                     />
 
                     {errors.password && (
