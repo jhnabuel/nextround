@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record JobApplicationResponse(UUID id, UserResponse user,
+public record JobApplicationResponse(UUID id,
                                      CompanyResponse company,
                                      String jobTitle,
                                      String jobUrl,
@@ -21,6 +21,5 @@ public record JobApplicationResponse(UUID id, UserResponse user,
                                      String currency,
                                      LocalDate appliedDate,
                                      LocalDateTime createdAt,
-                                     LocalDateTime updatedAt) {
-    }
+                                     LocalDateTime updatedAt) {}
 

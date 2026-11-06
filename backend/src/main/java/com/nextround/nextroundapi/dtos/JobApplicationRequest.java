@@ -1,5 +1,6 @@
 package com.nextround.nextroundapi.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.enums.WorkLocationType;
 import jakarta.validation.constraints.AssertTrue;
@@ -42,8 +43,9 @@ public record JobApplicationRequest(
 
         LocalDate appliedDate
 ) {
+        @JsonIgnore
         @AssertTrue(message = "Either companyId or companyName must be provided")
-        public boolean hasCompanyIdentifier() {
-                return companyId != null || (companyName != null && !companyName.trim().isEmpty());
+        public boolean isCompanyIdentifierPresent() {
+                return companyId != null || (companyName != null && !companyName.isBlank());
         }
 }
