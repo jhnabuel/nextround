@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
-import { applicationService } from "../../../services/application.service";
+import { applicationService, type ApplicationQueryParams } from "../../../services/application.service";
 import { applicationKeys } from "../api/applicationKeys";
 
 import type {
@@ -10,10 +10,10 @@ import type {
     UpdateJobApplicationRequest,
 } from "../types/application.types";
 
-export function useApplications(){
+export function useApplications(params?: ApplicationQueryParams){
     return useQuery({
-        queryKey: applicationKeys.lists(),
-        queryFn: applicationService.getAll,
+        queryKey: params ? applicationKeys.list(params as Record<string, unknown>) : applicationKeys.lists(),
+        queryFn: () => applicationService.getAll(params),
         staleTime: 1000 * 60 * 5,
     });
 }

@@ -34,6 +34,10 @@ export default function ApplicationsPage() {
 
     // Map backend JobApplicationResponse to KanbanApplication shape
     const applications = useMemo<KanbanApplication[]>(() => {
+        if (!Array.isArray(rawApplications)) {
+            return [];
+        }
+
         return rawApplications.map((app) => ({
             id: app.id,
             jobTitle: app.jobTitle,
