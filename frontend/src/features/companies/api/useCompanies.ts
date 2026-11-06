@@ -9,7 +9,7 @@ export const companyKeys = {
 export function useCompanies() {
     return useQuery({
         queryKey: companyKeys.lists(),
-        queryFn: companyService.getAll,
-        staleTime: 1000 * 60 * 10, // 10 minutes cache
+        queryFn: () => companyService.getAll(),
+        staleTime: 1000 * 60 * 10,
     });
 }

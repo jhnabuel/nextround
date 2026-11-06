@@ -195,11 +195,12 @@ export function ApplicationFormDialog({
                             <option value="">
                                 {isLoadingCompanies ? "Loading companies..." : "Select a company"}
                             </option>
-                            {companies?.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name} {c.location ? `(${c.location})` : ""}
-                                </option>
-                            ))}
+                            {Array.isArray(companies) &&
+                                companies.map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                        {c.name} {c.location ? `(${c.location})` : ""}
+                                    </option>
+                                ))}
                         </select>
                         {errors.companyId && (
                             <p className="mt-1 text-[11px] text-rose-600">
