@@ -40,6 +40,7 @@ public class JobApplication {
     private String jobUrl;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ApplicationStatus status = ApplicationStatus.APPLIED;
 
     @Enumerated(EnumType.STRING)

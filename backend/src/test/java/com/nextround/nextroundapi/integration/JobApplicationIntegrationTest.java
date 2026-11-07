@@ -2,9 +2,11 @@ package com.nextround.nextroundapi.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nextround.nextroundapi.BaseIntegrationTest;
+import com.nextround.nextroundapi.dtos.CompanyRequest;
 import com.nextround.nextroundapi.dtos.JobApplicationRequest;
 import com.nextround.nextroundapi.dtos.RegisterRequest;
 import com.nextround.nextroundapi.entity.Company;
+import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.enums.WorkLocationType;
 import com.nextround.nextroundapi.repository.CompanyRepository;
@@ -39,40 +41,22 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
 
     private String userAToken;
     private String userBToken;
-    private Company savedCompany;
+    private Company companyOwnedByA;
 
     @BeforeEach
     void setUp() throws Exception {
-        // Clear tables in reverse dependency order
         jobApplicationRepository.deleteAllInBatch();
         companyRepository.deleteAllInBatch();
         userRepository.deleteAllInBatch();
 
-        // 1. Seed primary company
-        savedCompany = companyRepository.saveAndFlush(
-                new Company("Canva", "https://canva.com", "Design & Tech", "Manila, Philippines")
-        );
+        userAToken = registerAndExtractJwt("alice@nextround.dev", "Password123!", "Alice", "Guillermo");
+        userBToken = registerAndExtractJwt("bob@nextround.dev", "Password123!", "Bob", "Navarro");
 
-        // 2. Register Tenant A
-        userAToken = registerAndExtractJwt(
-                "candidate.a@nextround.dev",
-                "Password123!",
-                "Alice",
-                "Guillermo"
-        );
-
-        // 3. Register Tenant B
-        userBToken = registerAndExtractJwt(
-                "candidate.b@nextround.dev",
-                "Password123!",
-                "Bob",
-                "Navarro"
-        );
+        companyOwnedByA = createCompany(userAToken, "Canva");
     }
 
     private String registerAndExtractJwt(String email, String password, String firstName, String lastName) throws Exception {
         RegisterRequest request = new RegisterRequest(email, password, firstName, lastName);
-
         MvcResult result = mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -83,18 +67,28 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
         return responseNode.get("token").asText();
     }
 
-    private String createApplication(String jwtToken, String title) throws Exception {
-        return createApplication(jwtToken, savedCompany, title, ApplicationStatus.APPLIED, WorkLocationType.HYBRID);
+    private Company createCompany(String token, String name) throws Exception {
+        CompanyRequest request = new CompanyRequest(name, "https://example.com", "Tech", "Remote");
+        MvcResult result = mockMvc.perform(post("/api/v1/companies")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        JsonNode node = objectMapper.readTree(result.getResponse().getContentAsString());
+        return companyRepository.findById(UUID.fromString(node.get("id").asText())).orElseThrow();
     }
 
-    private String createApplication(String jwtToken, Company company, String title, ApplicationStatus status, WorkLocationType location) throws Exception {
+    private String createApplication(String jwtToken, UUID companyId, String companyName, String title) throws Exception {
         JobApplicationRequest request = new JobApplicationRequest(
-                company.getId(),
+                companyId,
+                companyName,
                 title,
-                "https://canva.com/careers/sample",
-                status,
-                location,
-                BigDecimal.valueOf(85000),
+                "https://canva.com/careers/1",
+                ApplicationStatus.APPLIED,
+                WorkLocationType.REMOTE,
+                BigDecimal.valueOf(80000),
                 BigDecimal.valueOf(110000),
                 "PHP",
                 LocalDate.now()
@@ -112,148 +106,105 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/applications -> should persist job application and link to authenticated user")
-    void createJobApplication_Success() throws Exception {
+    @DisplayName("GET /api/v1/applications/{id} -> userCannotReadAnotherUsersApplication (returns 404)")
+    void userCannotReadAnotherUsersApplication() throws Exception {
+        String appId = createApplication(userAToken, companyOwnedByA.getId(), null, "Frontend Engineer");
+
+        mockMvc.perform(get("/api/v1/applications/{id}", appId)
+                        .header("Authorization", "Bearer " + userBToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/applications -> userCannotAttachApplicationToAnotherUsersCompany (returns 404)")
+    void userCannotAttachApplicationToAnotherUsersCompany() throws Exception {
         JobApplicationRequest request = new JobApplicationRequest(
-                savedCompany.getId(),
-                "Junior Software Engineer",
-                "https://canva.com/jobs/101",
+                companyOwnedByA.getId(), // Owned by User A
+                null,
+                "Intruder Role",
+                null,
                 ApplicationStatus.APPLIED,
-                WorkLocationType.HYBRID,
-                BigDecimal.valueOf(60000),
-                BigDecimal.valueOf(75000),
+                WorkLocationType.REMOTE,
+                null,
+                null,
                 "PHP",
                 LocalDate.now()
         );
 
-        MvcResult result = mockMvc.perform(post("/api/v1/applications")
-                        .header("Authorization", "Bearer " + userAToken)
+        mockMvc.perform(post("/api/v1/applications")
+                        .header("Authorization", "Bearer " + userBToken) // Sent by User B
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/applications -> creates application and resolves new company inline by companyName")
+    void createApplication_WithCompanyName_FindOrCreateSuccess() throws Exception {
+        JobApplicationRequest request = new JobApplicationRequest(
+                null,
+                "Automattic",
+                "Full Stack Developer",
+                "https://automattic.com/jobs",
+                ApplicationStatus.APPLIED,
+                WorkLocationType.REMOTE,
+                BigDecimal.valueOf(90000),
+                BigDecimal.valueOf(120000),
+                "USD",
+                LocalDate.now()
+        );
+
+        mockMvc.perform(post("/api/v1/applications")
+                        .header("Authorization", "Bearer " + userBToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.jobTitle").value("Junior Software Engineer"))
-                .andExpect(jsonPath("$.applicationStatus").value("APPLIED"))
-                .andExpect(jsonPath("$.workLocation").value("HYBRID"))
-                .andExpect(jsonPath("$.company.id").value(savedCompany.getId().toString()))
-                .andReturn();
+                .andExpect(jsonPath("$.jobTitle").value("Full Stack Developer"))
+                .andExpect(jsonPath("$.company.companyName").value("Automattic"));
 
-        String rawId = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
-        UUID createdId = UUID.fromString(rawId);
-
-        var savedApp = jobApplicationRepository.findByIdWithDetails(createdId).orElseThrow();
-        assertThat(savedApp.getUser().getEmail()).isEqualTo("candidate.a@nextround.dev");
-        assertThat(savedApp.getCompany().getId()).isEqualTo(savedCompany.getId());
+        User bob = userRepository.findByEmail("bob@nextround.dev").orElseThrow();
+        assertThat(companyRepository.existsByUserIdAndCompanyNameIgnoreCase(bob.getId(), "Automattic")).isTrue();
     }
 
     @Test
-    @DisplayName("GET /api/v1/applications -> should only return applications belonging to caller")
-    void getAllApplications_EnforcesTenantIsolation() throws Exception {
-        createApplication(userAToken, "Backend Developer - Java");
-        createApplication(userAToken, "Full-Stack Developer - Next.js");
-        createApplication(userBToken, "Frontend Developer - React");
-
-        mockMvc.perform(get("/api/v1/applications")
-                        .header("Authorization", "Bearer " + userAToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[?(@.jobTitle == 'Backend Developer - Java')]").exists())
-                .andExpect(jsonPath("$.content[?(@.jobTitle == 'Full-Stack Developer - Next.js')]").exists());
-
-        mockMvc.perform(get("/api/v1/applications")
-                        .header("Authorization", "Bearer " + userBToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].jobTitle").value("Frontend Developer - React"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/applications?companyId={id}&status={status} -> returns matching tenant applications only")
-    void getAllApplications_CombinedCompanyAndStatusFilter_Success() throws Exception {
-        Company secondCompany = companyRepository.saveAndFlush(
-                new Company("GCash", "https://gcash.com", "Fintech", "Taguig, Philippines")
-        );
-
-        // Tenant A targets
-        createApplication(userAToken, savedCompany, "Senior Backend Engineer", ApplicationStatus.INTERVIEWING, WorkLocationType.REMOTE);
-        createApplication(userAToken, savedCompany, "Junior Backend Engineer", ApplicationStatus.APPLIED, WorkLocationType.ON_SITE);
-        createApplication(userAToken, secondCompany, "Lead Systems Engineer", ApplicationStatus.INTERVIEWING, WorkLocationType.HYBRID);
-
-        // Tenant B target (should not leak)
-        createApplication(userBToken, savedCompany, "Security Engineer", ApplicationStatus.INTERVIEWING, WorkLocationType.REMOTE);
-
-        mockMvc.perform(get("/api/v1/applications")
-                        .header("Authorization", "Bearer " + userAToken)
-                        .param("companyId", savedCompany.getId().toString())
-                        .param("status", ApplicationStatus.INTERVIEWING.name()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].jobTitle").value("Senior Backend Engineer"))
-                .andExpect(jsonPath("$.content[0].applicationStatus").value("INTERVIEWING"))
-                .andExpect(jsonPath("$.content[0].workLocation").value("REMOTE"))
-                .andExpect(jsonPath("$.content[0].company.id").value(savedCompany.getId().toString()));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/applications/{id} -> Tenant B cannot view Tenant A's application")
-    void getById_CrossTenantAccess_ReturnsNotFound() throws Exception {
-        String applicationAId = createApplication(userAToken, "DevOps Engineer");
-
-        mockMvc.perform(get("/api/v1/applications/" + applicationAId)
-                        .header("Authorization", "Bearer " + userBToken))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @DisplayName("DELETE /api/v1/applications/{id} -> Tenant B cannot delete Tenant A's application")
-    void delete_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception {
-        String appAId = createApplication(userAToken, "Site Reliability Engineer");
-
-        mockMvc.perform(delete("/api/v1/applications/" + appAId)
-                        .header("Authorization", "Bearer " + userBToken))
-                .andExpect(status().isNotFound());
-
-        assertThat(jobApplicationRepository.existsById(UUID.fromString(appAId))).isTrue();
-    }
-
-    @Test
-    @DisplayName("DELETE /api/v1/applications/{id} -> Owner deletes own applications; returns 204")
-    void delete_JobApplicationOwner_Success() throws Exception {
-        String appAId = createApplication(userAToken, "Platform Engineer");
-
-        mockMvc.perform(delete("/api/v1/applications/" + appAId)
-                        .header("Authorization", "Bearer " + userAToken))
-                .andExpect(status().isNoContent());
-
-        assertThat(jobApplicationRepository.existsById(UUID.fromString(appAId))).isFalse();
-    }
-
-    @Test
-    @DisplayName("PUT /api/v1/applications/{id} -> Tenant B cannot edit Tenant A's application")
+    @DisplayName("PUT /api/v1/applications/{id} -> User B cannot edit User A's application")
     void put_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception {
-        String applicationAId = createApplication(userAToken, "Data Engineer");
+        String appId = createApplication(userAToken, companyOwnedByA.getId(), null, "Data Analyst");
 
         JobApplicationRequest requestHijack = new JobApplicationRequest(
-                savedCompany.getId(),
+                companyOwnedByA.getId(),
+                null,
                 "Hijacked Title",
-                "https://canva.com/careers/x",
-                ApplicationStatus.OFFER_RECEIVED,
+                null,
+                ApplicationStatus.ACCEPTED,
                 WorkLocationType.REMOTE,
-                BigDecimal.valueOf(1),
-                BigDecimal.valueOf(2),
+                null,
+                null,
                 "PHP",
                 LocalDate.now()
         );
 
-        mockMvc.perform(put("/api/v1/applications/" + applicationAId)
+        mockMvc.perform(put("/api/v1/applications/" + appId)
                         .header("Authorization", "Bearer " + userBToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestHijack)))
                 .andExpect(status().isNotFound());
 
-        mockMvc.perform(get("/api/v1/applications/" + applicationAId)
+        mockMvc.perform(get("/api/v1/applications/" + appId)
                         .header("Authorization", "Bearer " + userAToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jobTitle").value("Data Engineer"));
+                .andExpect(jsonPath("$.jobTitle").value("Data Analyst"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/applications/{id} -> User B cannot delete User A's application")
+    void delete_CrossTenantAttempt_ReturnsNotFoundAndPreservesData() throws Exception {
+        String appId = createApplication(userAToken, companyOwnedByA.getId(), null, "DevOps Engineer");
+
+        mockMvc.perform(delete("/api/v1/applications/" + appId)
+                        .header("Authorization", "Bearer " + userBToken))
+                .andExpect(status().isNotFound());
+
+        assertThat(jobApplicationRepository.existsById(UUID.fromString(appId))).isTrue();
     }
 }

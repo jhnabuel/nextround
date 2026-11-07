@@ -66,11 +66,6 @@ public class SecurityConfig {
                         // 2. Admin User Management: ALL other /users/** methods restricted to ADMIN
                         .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
 
-                        // 3. Company Management: Mutations restricted to ADMIN
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/companies/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/companies/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/companies/**").hasRole("ADMIN")
-
                         // 4. Authenticated reads/writes for applications and companies
                         .requestMatchers("/api/v1/applications/**").authenticated()
                         .requestMatchers("/api/v1/companies/**").authenticated()
