@@ -14,13 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Entity
 @NoArgsConstructor
 @Table(
-        name = "companies",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_companies_user_name",
-                        columnNames = {"user_id", "company_name"}
-                )
-        }
+        name = "companies"
 )
 public class Company {
 

@@ -1,8 +1,10 @@
 package com.nextround.nextroundapi;
 
 
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -30,6 +32,16 @@ public class BaseIntegrationTest {
 
     static{
         postgres.start();
+    }
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void ensureCaseInsensitiveIndex() {
+        jdbcTemplate.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS uk_companies_user_name_ci " +
+                        "ON companies (user_id, lower(company_name))");
     }
 
     @DynamicPropertySource
