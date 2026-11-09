@@ -126,6 +126,32 @@ class JobApplicationServiceTest {
             verifyNoInteractions(companyService);
             verify(jobApplicationRepository, never()).save(any());
         }
+
+        @Test
+        @DisplayName("Should pass companyName to resolveCompanyForUser when no companyId is given")
+        void createJobApplication_ByCompanyName_DelegatesToResolver(){
+            JobApplicationRequest request = new JobApplicationRequest(null, "Canva", "Backend Engineer",
+                    null, null, null, null, null, null, null);
+
+            when(companyService.resolveCompanyForUser(null, "Canva", currentUser)).thenReturn(sampleCompany);
+            when(jobApplicationRepository.save(any(JobApplication.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            jobApplicationService.createJobApplication(request, currentUser);
+
+
+            ArgumentCaptor<JobApplication> captor = ArgumentCaptor.forClass(JobApplication.class);
+            verify(jobApplicationRepository).save(captor.capture());
+            JobApplication saved = captor.getValue();
+
+            assertThat(saved.getCompany()).isSameAs(sampleCompany);
+            assertThat(saved.getUser()).isSameAs(currentUser);
+
+            // constructor defaults applied when optional fields are null
+            assertThat(saved.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
+            assertThat(saved.getWorkLocation()).isEqualTo(WorkLocationType.ON_SITE);
+            assertThat(saved.getCurrency()).isEqualTo("PHP");
+            assertThat(saved.getAppliedDate()).isNotNull();
+        }
     }
 
     @Nested
