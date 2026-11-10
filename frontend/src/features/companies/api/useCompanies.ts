@@ -4,12 +4,14 @@ import { companyService } from "../../../services/company.service";
 export const companyKeys = {
     all: ["companies"] as const,
     lists: () => [...companyKeys.all, "list"] as const,
+    list: (search?: string) => [...companyKeys.lists(), { search: search?.trim() || "" }] as const,
 };
 
-export function useCompanies() {
+export function useCompanies(search?: string) {
+    const query = search?.trim() || "";
     return useQuery({
-        queryKey: companyKeys.lists(),
-        queryFn: () => companyService.getAll(),
-        staleTime: 1000 * 60 * 10,
+        queryKey: companyKeys.list(query),
+        queryFn: () => companyService.getAll(query),
+        staleTime: 1000 * 60 * 2, // 2 mins cache
     });
 }

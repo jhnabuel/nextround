@@ -14,10 +14,12 @@ export type WorkLocationType = "REMOTE" | "HYBRID" | "ON_SITE";
 
 export interface CompanySummary {
     id: string;
-    name: string;
+    companyName: string;
     websiteUrl?: string;
     industry?: string;
     location?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 
@@ -39,7 +41,8 @@ export interface JobApplicationResponse {
 export interface CreateJobApplicationRequest {
     jobTitle: string;
     jobUrl?: string;
-    companyId: string;
+    companyId?: string;
+    companyName?: string;
     applicationStatus: ApplicationStatus;
     workLocation: WorkLocationType;
     salaryMin?: number;
@@ -51,10 +54,12 @@ export interface CreateJobApplicationRequest {
 export interface UpdateJobApplicationRequest {
     jobTitle?: string;
     jobUrl?: string;
+    companyId?: string;
+    companyName?: string;
     applicationStatus?: ApplicationStatus;
     workLocation?: WorkLocationType;
     salaryMin?: number;
     salaryMax?: number;
-    salaryCurrency?: string;
+    currency?: string;
     appliedDate?: string;
 }

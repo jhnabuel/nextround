@@ -3,30 +3,15 @@ import type { CompanySummary } from "../features/applications/types/application.
 import type { SpringPage } from "../types/pagination.types";
 
 export const companyService = {
-    getAll: async (): Promise<CompanySummary[]> => {
-        const response = await apiClient.get<SpringPage<CompanySummary> | CompanySummary[]>("/companies", {
+    getAll: async (search?: string): Promise<CompanySummary[]> => {
+        const response = await apiClient.get<SpringPage<CompanySummary>>("/companies", {
             params: {
-                size: 100, // Fetch up to 100 to populate the dropdown without truncation
+                search: search?.trim() || undefined,
+                size: 15,
+                sort: "companyName,asc",
             },
         });
 
-        const payload = response.data as any;
-
-        // Handle Spring Data Page<T>
-        if (Array.isArray(payload?.content)) {
-            return payload.content;
-        }
-
-        // Handle generic wrapper ({ data: [...] })
-        if (Array.isArray(payload?.data)) {
-            return payload.data;
-        }
-
-        // Handle direct list/array
-        if (Array.isArray(payload)) {
-            return payload;
-        }
-
-        return [];
+        return response.data?.content ?? [];
     },
 };
