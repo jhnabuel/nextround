@@ -41,12 +41,12 @@ export default function ApplicationsPage() {
         return rawApplications.map((app) => ({
             id: app.id,
             jobTitle: app.jobTitle,
-            companyName: app.company.name,
+            companyName: app.company.companyName, // Updated from app.company.name
             status: app.applicationStatus,
             workLocation: app.workLocation,
             salaryMin: app.salaryMin,
             salaryMax: app.salaryMax,
-            salaryCurrency: app.salaryCurrency,
+            salaryCurrency: app.currency, // Updated from app.salaryCurrency
             appliedDate: app.appliedDate,
             jobUrl: app.jobUrl,
             createdAt: app.createdAt,

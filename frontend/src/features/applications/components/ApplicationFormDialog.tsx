@@ -1,8 +1,12 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { X, Loader2 } from "lucide-react";
-import { useCompanies } from "../../companies/api/useCompanies";
-import { useCreateApplication, useUpdateApplication } from "../hooks/useApplications";
+import { CompanyCombobox } from "../../companies/components/CompanyCombobox";
+import {
+    useCreateApplication,
+    useUpdateApplication,
+} from "../hooks/useApplications";
+
 import type {
     JobApplicationResponse,
     CreateJobApplicationRequest,
@@ -18,13 +22,14 @@ interface ApplicationFormDialogProps {
 
 type FormValues = {
     jobTitle: string;
-    companyId: string;
+    companyId?: string;
+    companyName?: string;
     jobUrl?: string;
     applicationStatus: ApplicationStatus;
     workLocation: WorkLocationType;
     salaryMin?: number | string;
     salaryMax?: number | string;
-    salaryCurrency?: string;
+    currency?: string;
     appliedDate: string;
 };
 
@@ -50,7 +55,6 @@ export function ApplicationFormDialog({
                                           onClose,
                                           initialData,
                                       }: ApplicationFormDialogProps) {
-    const { data: companies, isLoading: isLoadingCompanies } = useCompanies();
     const createMutation = useCreateApplication();
     const updateMutation = useUpdateApplication();
 
@@ -60,18 +64,20 @@ export function ApplicationFormDialog({
     const {
         register,
         handleSubmit,
+        control,
         reset,
         formState: { errors },
     } = useForm<FormValues>({
         defaultValues: {
             jobTitle: "",
-            companyId: "",
+            companyId: undefined,
+            companyName: "",
             jobUrl: "",
             applicationStatus: "APPLIED",
             workLocation: "REMOTE",
             salaryMin: "",
             salaryMax: "",
-            salaryCurrency: "USD",
+            currency: "PHP",
             appliedDate: new Date().toISOString().split("T")[0],
         },
     });
@@ -81,24 +87,26 @@ export function ApplicationFormDialog({
             reset({
                 jobTitle: initialData.jobTitle,
                 companyId: initialData.company.id,
+                companyName: initialData.company.companyName,
                 jobUrl: initialData.jobUrl || "",
                 applicationStatus: initialData.applicationStatus,
                 workLocation: initialData.workLocation,
                 salaryMin: initialData.salaryMin ?? "",
                 salaryMax: initialData.salaryMax ?? "",
-                salaryCurrency: initialData.salaryCurrency || "USD",
+                currency: initialData.currency || "PHP",
                 appliedDate: initialData.appliedDate?.split("T")[0] || "",
             });
         } else {
             reset({
                 jobTitle: "",
-                companyId: "",
+                companyId: undefined,
+                companyName: "",
                 jobUrl: "",
                 applicationStatus: "APPLIED",
                 workLocation: "REMOTE",
                 salaryMin: "",
                 salaryMax: "",
-                salaryCurrency: "USD",
+                currency: "PHP",
                 appliedDate: new Date().toISOString().split("T")[0],
             });
         }
@@ -109,13 +117,14 @@ export function ApplicationFormDialog({
     const onSubmit = async (values: FormValues) => {
         const payload: CreateJobApplicationRequest = {
             jobTitle: values.jobTitle.trim(),
-            companyId: values.companyId,
+            companyId: values.companyId || undefined,
+            companyName: !values.companyId ? values.companyName?.trim() : undefined,
             jobUrl: values.jobUrl?.trim() || undefined,
             applicationStatus: values.applicationStatus,
             workLocation: values.workLocation,
             salaryMin: values.salaryMin ? Number(values.salaryMin) : undefined,
             salaryMax: values.salaryMax ? Number(values.salaryMax) : undefined,
-            salaryCurrency: values.salaryCurrency || undefined,
+            currency: values.currency || "PHP",
             appliedDate: values.appliedDate || undefined,
         };
 
@@ -149,9 +158,7 @@ export function ApplicationFormDialog({
                             {isEditing ? "Edit Application" : "New Application"}
                         </h2>
                         <p className="text-xs text-[#64748B] mt-0.5">
-                            {isEditing
-                                ? "Update role parameters or status"
-                                : "Add a new position to your tracking board"}
+                            {isEditing ? "Update role parameters or status" : "Add a new opportunity to your pipeline"}
                         </p>
                     </div>
                     <button
@@ -176,49 +183,57 @@ export function ApplicationFormDialog({
                             className={inputClass(Boolean(errors.jobTitle))}
                         />
                         {errors.jobTitle && (
-                            <p className="mt-1 text-[11px] text-rose-600">
-                                {errors.jobTitle.message}
-                            </p>
+                            <p className="mt-1 text-[11px] text-rose-600">{errors.jobTitle.message}</p>
                         )}
                     </div>
 
-                    {/* Company Selection */}
+                    {/* Company Search Combobox */}
                     <div>
                         <label className="block text-xs font-medium text-[#2E3532] mb-1">
                             Company <span className="text-rose-500">*</span>
                         </label>
-                        <select
-                            {...register("companyId", { required: "Company is required" })}
-                            disabled={isLoadingCompanies}
-                            className={inputClass(Boolean(errors.companyId))}
-                        >
-                            <option value="">
-                                {isLoadingCompanies ? "Loading companies..." : "Select a company"}
-                            </option>
-                            {Array.isArray(companies) &&
-                                companies.map((c) => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name} {c.location ? `(${c.location})` : ""}
-                                    </option>
-                                ))}
-                        </select>
-                        {errors.companyId && (
-                            <p className="mt-1 text-[11px] text-rose-600">
-                                {errors.companyId.message}
-                            </p>
+                        <Controller
+                            name="companyName"
+                            control={control}
+                            rules={{
+                                validate: (_, formValues) =>
+                                    Boolean(formValues.companyId || formValues.companyName?.trim()) ||
+                                    "Company name or selection is required",
+                            }}
+                            render={({ fieldState }) => (
+                                <Controller
+                                    name="companyId"
+                                    control={control}
+                                    render={({ field: idField }) => (
+                                        <Controller
+                                            name="companyName"
+                                            control={control}
+                                            render={({ field: nameField }) => (
+                                                <CompanyCombobox
+                                                    selectedCompanyId={idField.value}
+                                                    selectedCompanyName={nameField.value}
+                                                    onSelect={({ companyId, companyName }) => {
+                                                        idField.onChange(companyId);
+                                                        nameField.onChange(companyName);
+                                                    }}
+                                                    error={Boolean(fieldState.error)}
+                                                />
+                                            )}
+                                        />
+                                    )}
+                                />
+                            )}
+                        />
+                        {errors.companyName && (
+                            <p className="mt-1 text-[11px] text-rose-600">{errors.companyName.message}</p>
                         )}
                     </div>
 
                     {/* Status & Work Location */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-medium text-[#2E3532] mb-1">
-                                Status
-                            </label>
-                            <select
-                                {...register("applicationStatus")}
-                                className={inputClass(false)}
-                            >
+                            <label className="block text-xs font-medium text-[#2E3532] mb-1">Status</label>
+                            <select {...register("applicationStatus")} className={inputClass(false)}>
                                 {STATUS_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
                                         {opt.label}
@@ -228,13 +243,8 @@ export function ApplicationFormDialog({
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-[#2E3532] mb-1">
-                                Work Location
-                            </label>
-                            <select
-                                {...register("workLocation")}
-                                className={inputClass(false)}
-                            >
+                            <label className="block text-xs font-medium text-[#2E3532] mb-1">Work Location</label>
+                            <select {...register("workLocation")} className={inputClass(false)}>
                                 {LOCATION_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>
                                         {opt.label}
@@ -247,35 +257,29 @@ export function ApplicationFormDialog({
                     {/* Salary Ranges */}
                     <div className="grid grid-cols-3 gap-2">
                         <div>
-                            <label className="block text-xs font-medium text-[#2E3532] mb-1">
-                                Min Salary
-                            </label>
+                            <label className="block text-xs font-medium text-[#2E3532] mb-1">Min Salary</label>
                             <input
                                 type="number"
-                                placeholder="e.g. 80000"
+                                placeholder="e.g. 70000"
                                 {...register("salaryMin")}
                                 className={inputClass(false)}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-[#2E3532] mb-1">
-                                Max Salary
-                            </label>
+                            <label className="block text-xs font-medium text-[#2E3532] mb-1">Max Salary</label>
                             <input
                                 type="number"
-                                placeholder="e.g. 110000"
+                                placeholder="e.g. 95000"
                                 {...register("salaryMax")}
                                 className={inputClass(false)}
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-[#2E3532] mb-1">
-                                Currency
-                            </label>
+                            <label className="block text-xs font-medium text-[#2E3532] mb-1">Currency</label>
                             <input
                                 type="text"
-                                placeholder="USD"
-                                {...register("salaryCurrency")}
+                                placeholder="PHP"
+                                {...register("currency")}
                                 className={inputClass(false)}
                             />
                         </div>
@@ -284,9 +288,7 @@ export function ApplicationFormDialog({
                     {/* Job URL & Applied Date */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-medium text-[#2E3532] mb-1">
-                                Job Posting URL
-                            </label>
+                            <label className="block text-xs font-medium text-[#2E3532] mb-1">Job Posting URL</label>
                             <input
                                 type="url"
                                 placeholder="https://..."
@@ -295,14 +297,8 @@ export function ApplicationFormDialog({
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-medium text-[#2E3532] mb-1">
-                                Applied Date
-                            </label>
-                            <input
-                                type="date"
-                                {...register("appliedDate")}
-                                className={inputClass(false)}
-                            />
+                            <label className="block text-xs font-medium text-[#2E3532] mb-1">Applied Date</label>
+                            <input type="date" {...register("appliedDate")} className={inputClass(false)} />
                         </div>
                     </div>
 
