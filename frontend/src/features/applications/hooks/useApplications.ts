@@ -35,14 +35,23 @@ export function useCreateApplication(){
         mutationFn: (payload: CreateJobApplicationRequest) => applicationService.create(payload),
         onSuccess: (newApp) => {
             queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
-            toast.success(`Added application for ${newApp.jobTitle} at ${newApp.company.name}`);
+
+            const companyDisplayName =
+                newApp.company?.companyName ||
+                (newApp.company as any)?.name ||
+                "company";
+
+            toast.success(
+                `Added application for ${newApp.jobTitle} at ${companyDisplayName}`,
+                { duration: 4000 }
+            );
         },
         onError: (err: unknown) => {
             let message = "Failed to create application.";
             if(isAxiosError<{ message?: string}> (err) && err.response?.data?.message){
                 message = err.response.data.message;
             }
-            toast.error(message);
+            toast.error(message, {duration: 4000});
         },
     });
 }
@@ -63,14 +72,14 @@ export function useUpdateApplication(){
             );
             // Invalidate lists to keep table/board in sync
             queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
-            toast.success("Application updated successfully.");
+            toast.success("Application updated successfully.", {duration: 4000});
         },
         onError: (err: unknown) => {
             let message = "Failed to update application.";
             if (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) {
                 message = err.response.data.message;
             }
-            toast.error(message);
+            toast.error(message, {duration: 4000});
         },
     });
 }
@@ -103,10 +112,10 @@ export function useDeleteApplication(){
             if (context?.previousApps) {
                 queryClient.setQueryData(applicationKeys.lists(), context.previousApps);
             }
-            toast.error("Failed to delete application.");
+            toast.error("Failed to delete application.", {duration: 4000});
         },
         onSuccess: () => {
-            toast.success("Application deleted.");
+            toast.success("Application deleted.", {duration: 4000});
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });

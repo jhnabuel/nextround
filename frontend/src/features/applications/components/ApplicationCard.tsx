@@ -2,6 +2,7 @@ import type React from "react";
 import { Calendar, MapPin, Building2 } from "lucide-react";
 import type { KanbanApplication } from "../types/kanban.types";
 import { formatSalaryRange, formatDate } from "../../../lib/formatters";
+import { Trash2, MoreVertical } from "lucide-react";
 
 interface ApplicationCardProps {
     application: KanbanApplication;
@@ -13,6 +14,9 @@ const WORK_LOCATION_LABELS = {
     HYBRID: "Hybrid",
     ON_SITE: "On-site",
 };
+
+
+
 
 export function ApplicationCard({ application, onClick }: ApplicationCardProps) {
     const {
@@ -26,7 +30,6 @@ export function ApplicationCard({ application, onClick }: ApplicationCardProps) 
         salaryCurrency = "USD",
         appliedDate,
     } = application;
-
     const formattedSalary = formatSalaryRange(salaryMin, salaryMax, salaryCurrency);
     const formattedDate = formatDate(appliedDate);
 
@@ -36,6 +39,7 @@ export function ApplicationCard({ application, onClick }: ApplicationCardProps) 
             onClick?.(id);
         }
     };
+
 
     return (
         <article
