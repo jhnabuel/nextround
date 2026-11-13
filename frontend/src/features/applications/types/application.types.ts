@@ -31,7 +31,7 @@ export interface JobApplicationResponse {
     workLocation: WorkLocationType;
     salaryMin?: number;
     salaryMax?: number;
-    salaryCurrency?: string;
+    currency?: string;
     appliedDate: string;
     company: CompanySummary;
     createdAt: string;
@@ -47,7 +47,7 @@ export interface CreateJobApplicationRequest {
     workLocation: WorkLocationType;
     salaryMin?: number;
     salaryMax?: number;
-    salaryCurrency?: string;
+    currency?: string;
     appliedDate?: string;
 }
 
@@ -63,3 +63,4 @@ export interface UpdateJobApplicationRequest {
     currency?: string;
     appliedDate?: string;
 }
+

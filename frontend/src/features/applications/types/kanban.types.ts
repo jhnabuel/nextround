@@ -1,5 +1,6 @@
 import type { ApplicationStatus, WorkLocationType} from "./application.types";
 
+
 export interface KanbanApplication {
     id: string;
     jobTitle: string;

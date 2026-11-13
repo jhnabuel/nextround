@@ -2,7 +2,6 @@ import type React from "react";
 import { Calendar, MapPin, Building2 } from "lucide-react";
 import type { KanbanApplication } from "../types/kanban.types";
 import { formatSalaryRange, formatDate } from "../../../lib/formatters";
-import { Trash2, MoreVertical } from "lucide-react";
 
 interface ApplicationCardProps {
     application: KanbanApplication;

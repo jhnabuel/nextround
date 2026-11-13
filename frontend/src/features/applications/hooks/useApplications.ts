@@ -10,6 +10,12 @@ import type {
     UpdateJobApplicationRequest,
 } from "../types/application.types";
 
+interface UpdateApplicationVariables {
+    id: string;
+    payload: UpdateJobApplicationRequest;
+    successMessage?: string;
+}
+
 export function useApplications(params?: ApplicationQueryParams){
     return useQuery({
         queryKey: params ? applicationKeys.list(params as Record<string, unknown>) : applicationKeys.lists(),
@@ -55,31 +61,63 @@ export function useCreateApplication(){
         },
     });
 }
-
-export function useUpdateApplication(){
+export function useUpdateApplication() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            id, payload,
-        }: {id: string;
-            payload: UpdateJobApplicationRequest;
-        }) => applicationService.update(id, payload),
-        onSuccess: (updatedApp) => {
-            // Direct cache write to detail query
-            queryClient.setQueryData(
-                applicationKeys.detail(updatedApp.id), updatedApp
+        mutationFn: ({ id, payload }: UpdateApplicationVariables) =>
+            applicationService.update(id, payload),
+
+        onMutate: async ({ id, payload }) => {
+            await queryClient.cancelQueries({ queryKey: applicationKeys.lists() });
+
+            // Snapshot all cached list queries for rollback
+            const previousLists = queryClient.getQueriesData<JobApplicationResponse[]>({
+                queryKey: applicationKeys.lists(),
+            });
+
+            // Optimistically update matching application across all list caches
+            queryClient.setQueriesData<JobApplicationResponse[]>(
+                { queryKey: applicationKeys.lists() },
+                (old) =>
+                    old?.map((app) =>
+                        app.id === id
+                            ? {
+                                ...app,
+                                ...payload,
+                                applicationStatus: payload.applicationStatus ?? app.applicationStatus,
+                                updatedAt: new Date().toISOString(),
+                            }
+                            : app
+                    )
             );
-            // Invalidate lists to keep table/board in sync
-            queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
-            toast.success("Application updated successfully.", {duration: 4000});
+
+            return { previousLists };
         },
-        onError: (err: unknown) => {
+
+        onError: (err: unknown, _variables, context) => {
+            // Restore previous cache snapshots on failure
+            context?.previousLists.forEach(([queryKey, data]) => {
+                queryClient.setQueryData(queryKey, data);
+            });
+
             let message = "Failed to update application.";
             if (isAxiosError<{ message?: string }>(err) && err.response?.data?.message) {
                 message = err.response.data.message;
             }
-            toast.error(message, {duration: 4000});
+            toast.error(message);
+        },
+
+        onSuccess: (updatedApp, variables) => {
+            queryClient.setQueryData(applicationKeys.detail(updatedApp.id), updatedApp);
+            toast.success(variables.successMessage ?? "Application updated successfully.", {
+                duration: 4000,
+            });
+        },
+
+        onSettled: (_data, _error, variables) => {
+            queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: applicationKeys.detail(variables.id) });
         },
     });
 }

@@ -2,10 +2,10 @@ import { Plus, Search, ArrowUpDown, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { KanbanApplication } from "../types/kanban.types";
-import type { JobApplicationResponse } from "../types/application.types";
+import type { JobApplicationResponse, ApplicationStatus, UpdateJobApplicationRequest } from "../types/application.types";
 import { KanbanBoard } from "../components/KanbanBoard";
 import { PageContainer } from "../../../components/layout/PageContainer";
-import { useApplications } from "../hooks/useApplications";
+import { useApplications, useUpdateApplication } from "../hooks/useApplications";
 import { ApplicationFormDialog } from "../components/ApplicationFormDialog";
 
 type StatusFilter = KanbanApplication["status"] | "ALL";
@@ -27,6 +27,8 @@ export default function ApplicationsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL");
     const [sortBy, setSortBy] = useState("createdAt,desc");
+
+    const updateMutation = useUpdateApplication();
 
     // Dialog state for create/edit operations
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -97,6 +99,35 @@ export default function ApplicationsPage() {
         setIsDialogOpen(false);
         setSelectedApp(null);
     };
+
+    const handleStatusChange = (id: string, newStatus: ApplicationStatus) => {
+        const existingApp = rawApplications.find((app) => app.id === id);
+        if(!existingApp || existingApp.applicationStatus === newStatus){
+            return;
+        }
+
+        const payload: UpdateJobApplicationRequest = {
+            companyId: existingApp.company.id,
+            jobTitle: existingApp.jobTitle,
+            jobUrl: existingApp.jobUrl || undefined,
+            applicationStatus: newStatus,
+            workLocation: existingApp.workLocation,
+            salaryMin: existingApp.salaryMin ?? undefined,
+            salaryMax: existingApp.salaryMax ?? undefined,
+            currency: existingApp.currency || "PHP",
+            appliedDate: existingApp.appliedDate || undefined,
+        };
+
+        const statusLabel =
+            STATUS_OPTIONS.find((opt) => opt.value === newStatus)?.label ?? newStatus;
+
+        updateMutation.mutate({
+            id,
+            payload,
+            successMessage: `Moved ${existingApp.jobTitle} to ${statusLabel}`,
+        });
+    };
+
 
     return (
         <PageContainer fluid={true} className="gap-4">
@@ -189,6 +220,7 @@ export default function ApplicationsPage() {
                     <KanbanBoard
                         applications={filteredApplications}
                         onCardClick={handleCardClick}
+                        onStatusChange={handleStatusChange}
                     />
                 )}
             </div>
