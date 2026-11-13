@@ -34,6 +34,21 @@ export default function ApplicationsPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedApp, setSelectedApp] = useState<JobApplicationResponse | null>(null);
 
+    function formatSalary(min?: number, max?: number, currency = "PHP"): string | undefined {
+        if (min == null && max == null) return undefined;
+
+        const fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+        if (min != null && max != null) {
+            return `${currency} ${fmt.format(min)} – ${fmt.format(max)}`;
+        }
+        if (min != null) {
+            return `${currency} ${fmt.format(min)}+`;
+        }
+        return `Up to ${currency} ${fmt.format(max!)}`;
+    }
+
+
     // Map backend JobApplicationResponse to KanbanApplication shape
     const applications = useMemo<KanbanApplication[]>(() => {
         if (!Array.isArray(rawApplications)) {
@@ -43,13 +58,21 @@ export default function ApplicationsPage() {
         return rawApplications.map((app) => ({
             id: app.id,
             jobTitle: app.jobTitle,
-            companyName: app.company.companyName, // Updated from app.company.name
+            companyName: app.company.companyName,
+            location: app.company.location,
             status: app.applicationStatus,
             workLocation: app.workLocation,
             salaryMin: app.salaryMin,
             salaryMax: app.salaryMax,
-            salaryCurrency: app.currency, // Updated from app.salaryCurrency
+            salaryCurrency: app.currency,
+            formattedSalary: formatSalary(app.salaryMin, app.salaryMax, app.currency || "PHP"),
             appliedDate: app.appliedDate,
+            formattedDate: app.appliedDate
+                ? new Date(app.appliedDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                })
+                : undefined,
             jobUrl: app.jobUrl,
             createdAt: app.createdAt,
             updatedAt: app.updatedAt,
