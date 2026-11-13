@@ -1,53 +1,48 @@
-import type React from "react";
-import { Calendar, MapPin, Building2 } from "lucide-react";
-import type { KanbanApplication } from "../types/kanban.types";
-import { formatSalaryRange, formatDate } from "../../../lib/formatters";
+import type { KeyboardEvent } from "react";
+import { useDraggable } from "@dnd-kit/core";
+import { Building2, Calendar, MapPin } from "lucide-react";
+import { WORK_LOCATION_LABELS, type KanbanApplication } from "../types/kanban.types";
 
 interface ApplicationCardProps {
     application: KanbanApplication;
     onClick?: (id: string) => void;
 }
 
-const WORK_LOCATION_LABELS = {
-    REMOTE: "Remote",
-    HYBRID: "Hybrid",
-    ON_SITE: "On-site",
-};
-
-
-
-
 export function ApplicationCard({ application, onClick }: ApplicationCardProps) {
     const {
         id,
         jobTitle,
         companyName,
-        location,
         workLocation,
-        salaryMin,
-        salaryMax,
-        salaryCurrency = "USD",
-        appliedDate,
+        location,
+        formattedSalary,
+        formattedDate,
     } = application;
-    const formattedSalary = formatSalaryRange(salaryMin, salaryMax, salaryCurrency);
-    const formattedDate = formatDate(appliedDate);
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+        id,
+    });
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLElement>) => {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             onClick?.(id);
         }
     };
 
-
     return (
         <article
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
             tabIndex={0}
             role="button"
             aria-label={`${jobTitle} at ${companyName}`}
             onClick={() => onClick?.(id)}
             onKeyDown={handleKeyDown}
-            className="group relative bg-white border border-[#E2E8F0] rounded-[10px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-[#7E9181] hover:shadow-[0_2px_8px_rgba(46,53,50,0.08)] transition-all duration-150 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2"
+            className={`group relative bg-white border border-[#E2E8F0] rounded-[10px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-[#7E9181] hover:shadow-[0_2px_8px_rgba(46,53,50,0.08)] transition-all duration-150 cursor-grab active:cursor-grabbing select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7E9181] focus-visible:ring-offset-2 ${
+                isDragging ? "opacity-40" : ""
+            }`}
         >
             <div className="flex items-center gap-1.5 mb-1.5 min-w-0 text-[#64748B]">
                 <Building2 className="w-3.5 h-3.5 shrink-0 text-[#7E9181]" />
