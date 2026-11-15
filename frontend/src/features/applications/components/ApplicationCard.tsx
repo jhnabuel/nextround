@@ -2,6 +2,8 @@ import type { KeyboardEvent } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Building2, Calendar, MapPin } from "lucide-react";
 import { type KanbanApplication } from "../types/kanban.types";
+import type { WorkLocationType } from "../types/application.types";
+
 
 const WORK_LOCATION_LABELS: Record<WorkLocationType, string> = {
     REMOTE: "Remote",
