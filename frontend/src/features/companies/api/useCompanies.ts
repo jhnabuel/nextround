@@ -12,6 +12,7 @@ export function useCompanies(search?: string) {
     return useQuery({
         queryKey: companyKeys.list(query),
         queryFn: () => companyService.getAll(query),
-        staleTime: 1000 * 60 * 2, // 2 mins cache
+        placeholderData: keepPreviousData,
+        staleTime: 1000 * 60 * 2,
     });
 }
