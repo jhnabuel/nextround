@@ -1,8 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
+import { AxiosError, isAxiosError } from "axios";
 import { toast } from "sonner";
 import { applicationService, type ApplicationQueryParams } from "../../../services/application.service";
 import { applicationKeys } from "../api/applicationKeys";
+
+interface ApiErrorResponse{
+    message?: string;
+    errors?: Record<string, string>;
+}
 
 import type {
     JobApplicationResponse,
@@ -44,7 +49,7 @@ export function useCreateApplication(){
 
             const companyDisplayName =
                 newApp.company?.companyName ||
-                (newApp.company as any)?.name ||
+                (newApp.company as { name?: string } | undefined)?.name||
                 "company";
 
             toast.success(
@@ -52,11 +57,9 @@ export function useCreateApplication(){
                 { duration: 4000 }
             );
         },
-        onError: (err: unknown) => {
-            let message = "Failed to create application.";
-            if(isAxiosError<{ message?: string}> (err) && err.response?.data?.message){
-                message = err.response.data.message;
-            }
+        onError: (error: AxiosError<ApiErrorResponse>) => {
+            const message =
+                error.response?.data?.message || "Failed to save application. Please try again.";
             toast.error(message, {duration: 4000});
         },
     });

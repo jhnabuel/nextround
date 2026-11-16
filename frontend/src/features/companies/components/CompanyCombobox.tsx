@@ -19,15 +19,16 @@ export function CompanyCombobox({
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
-
+    const [prevSelectedName, setPrevSelectedName] = useState(selectedCompanyName);
     const debouncedSearch = useDebounce(searchTerm, 300);
     const { data: companies = [], isFetching } = useCompanies(debouncedSearch);
 
-    useEffect(() => {
+    if (selectedCompanyName !== prevSelectedName) {
+        setPrevSelectedName(selectedCompanyName);
         if (selectedCompanyName !== undefined) {
             setSearchTerm(selectedCompanyName);
         }
-    }, [selectedCompanyName]);
+    }
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
