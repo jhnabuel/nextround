@@ -1,9 +1,10 @@
 package com.nextround.nextroundapi.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nextround.nextroundapi.enums.ApplicationStatus;
 import com.nextround.nextroundapi.enums.WorkLocationType;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
@@ -11,10 +12,13 @@ import org.hibernate.validator.constraints.URL;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+
 public record JobApplicationRequest(
 
-        @NotNull(message = "Company ID is required")
         UUID companyId,
+
+        @Size(max = 100, message = "Company name cannot exceed 100 characters")
+        String companyName,
 
         @NotBlank(message = "Job title is required")
         @Size(max = 100, message = "Job title cannot exceed 100 characters")
@@ -38,4 +42,10 @@ public record JobApplicationRequest(
         String currency,
 
         LocalDate appliedDate
-) {}
+) {
+        @JsonIgnore
+        @AssertTrue(message = "Either companyId or companyName must be provided")
+        public boolean isCompanyIdentifierPresent() {
+                return companyId != null || (companyName != null && !companyName.isBlank());
+        }
+}

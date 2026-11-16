@@ -1,17 +1,22 @@
 import type { ApplicationStatus, WorkLocationType} from "./application.types";
 
+
 export interface KanbanApplication {
     id: string;
     jobTitle: string;
     companyName: string;
     location?: string;
+    status: ApplicationStatus;
     workLocation: WorkLocationType;
     salaryMin?: number;
     salaryMax?: number;
     salaryCurrency?: string;
-    appliedDate?: string;
-    createdAt?:string;
-    status: ApplicationStatus;
+    formattedSalary?: string;
+    appliedDate: string;
+    formattedDate?: string;
+    jobUrl?: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface ColumnConfig {

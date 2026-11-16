@@ -8,15 +8,20 @@ export type ApplicationStatus =
     | "WITHDRAWN"
     | "GHOSTED";
 
+
+
 export type WorkLocationType = "REMOTE" | "HYBRID" | "ON_SITE";
 
 export interface CompanySummary {
     id: string;
-    name: string;
+    companyName: string;
     websiteUrl?: string;
     industry?: string;
     location?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
+
 
 export interface JobApplicationResponse {
     id: string;
@@ -26,31 +31,36 @@ export interface JobApplicationResponse {
     workLocation: WorkLocationType;
     salaryMin?: number;
     salaryMax?: number;
-    salaryCurrency?: string;
-    appliedDate?: string;
+    currency?: string;
+    appliedDate: string;
     company: CompanySummary;
     createdAt: string;
+    updatedAt: string;
 }
 
 export interface CreateJobApplicationRequest {
     jobTitle: string;
     jobUrl?: string;
-    companyId: string;
+    companyId?: string;
+    companyName?: string;
     applicationStatus: ApplicationStatus;
     workLocation: WorkLocationType;
     salaryMin?: number;
     salaryMax?: number;
-    salaryCurrency?: string;
+    currency?: string;
     appliedDate?: string;
 }
 
 export interface UpdateJobApplicationRequest {
     jobTitle?: string;
     jobUrl?: string;
+    companyId?: string;
+    companyName?: string;
     applicationStatus?: ApplicationStatus;
     workLocation?: WorkLocationType;
     salaryMin?: number;
     salaryMax?: number;
-    salaryCurrency?: string;
+    currency?: string;
     appliedDate?: string;
 }
+

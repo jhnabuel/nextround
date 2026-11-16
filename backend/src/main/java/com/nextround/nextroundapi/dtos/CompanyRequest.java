@@ -12,9 +12,9 @@ public record CompanyRequest(
         @URL(message = "Invalid website URL format")
         String websiteUrl,
 
-        @NotBlank(message = "Industry is required")
+        @Size(max = 100, message = "Industry cannot exceed 100 characters")
         String industry,
 
-        @NotBlank(message = "Location is required")
+        @Size(max = 100, message = "Location cannot exceed 100 characters")
         String location
 ) { }
