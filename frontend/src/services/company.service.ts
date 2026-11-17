@@ -23,7 +23,7 @@ export const companyService = {
 
     async getById(id: string): Promise<CompanyResponse>{
         const response = await apiClient.get<CompanyResponse>(`/companies/${id}`);
-    }
+    },
 
     async create(payload: CreateCompanyRequest): Promise<CompanyResponse> {
         const response = await apiClient.post<CompanyResponse>("/companies", payload);
