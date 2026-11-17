@@ -47,3 +47,51 @@ export function useCreateCompany(){
         },
     });
 }
+
+export function useUpdateCompany(){
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({id, payload}: UpdateCompanyVariables) => companyService.update(id, payload),
+        onSuccess: (updatedCompany) => {
+            queryClient.setQueryData(companyKeys.detail(updatedCompany.id), updatedCompany);
+            queryClient.invalidateQueries({ queryKey: companyKeys.lists() });
+            // Sync renamed companies across Kanban application cards
+            queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
+            toast.success(`Updated ${updatedCompany.companyName}.`, { duration: 4000 });
+        },
+        onError: (err: unknown) => {
+            if (isAxiosError<ApiErrorPayload>(err)){
+                if (err.response?.status === 409){
+                    toast.error(err.response.data?.message || "A company with this name already exists.");
+                    return;
+                }
+                toast.error(err.response?.data?.message || "Failed to update company.");
+                return;
+            }
+            toast.error("Failed to update company.");
+        },
+    });
+}
+
+export function useDeleteCompany() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => companyService.delete(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: companyKeys.lists() });
+            toast.success("Company deleted.", { duration: 4000 });
+        },
+        onError: (err: unknown) => {
+            // 409 Conflict is displayed inline inside DeleteCompanyDialog
+            if (isAxiosError(err) && err.response?.status === 409) {
+                return;
+            }
+            const message = isAxiosError<ApiErrorPayload>(err)
+                ? err.response?.data?.message || "Failed to delete company."
+                : "Failed to delete company.";
+            toast.error(message);
+        },
+    });
+}
