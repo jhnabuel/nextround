@@ -11,7 +11,7 @@ import {
 import { useCompanies } from "../hooks/useCompanies";
 import type { CompanyResponse } from "../types/company.types";
 import { CompanyTable } from "../components/CompanyTable";
-import { CompanyFormDialog } from "./CompanyFormDialog";
+import { CompanyFormDialog } from "../components/CompanyFormDialog";
 
 
 function useDebouncedValue<T>(value: T, delayMs = 300): T {
