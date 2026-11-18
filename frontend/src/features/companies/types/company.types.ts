@@ -4,8 +4,8 @@ export interface CompanyResponse{
     websiteUrl?: string | null;
     industry?: string | null;
     location?: string | null;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export interface CompanyRequest {
@@ -15,5 +15,7 @@ export interface CompanyRequest {
     location?: string | null;
 }
 
+
+export type CompanySummary = CompanyResponse;
 export type CreateCompanyRequest = CompanyRequest;
 export type EditCompanyRequest = CompanyRequest;

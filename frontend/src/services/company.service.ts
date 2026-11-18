@@ -1,5 +1,4 @@
 import { apiClient } from "../lib/apiClient";
-import type { CompanySummary } from "../features/applications/types/application.types";
 import type { SpringPage } from "../types/pagination.types";
 import type {
     CompanyResponse,
@@ -9,11 +8,11 @@ import type {
 
 
 export const companyService = {
-    getAll: async (search?: string): Promise<CompanySummary[]> => {
-        const response = await apiClient.get<SpringPage<CompanySummary>>("/companies", {
+    getAll: async (search?: string): Promise<CompanyResponse[]> => {
+        const response = await apiClient.get<SpringPage<CompanyResponse>>("/companies", {
             params: {
                 search: search?.trim() || undefined,
-                size: 15,
+                size: 100,
                 sort: "companyName,asc",
             },
         });
