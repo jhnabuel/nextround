@@ -10,10 +10,9 @@ import {
 } from "lucide-react";
 import { useCompanies } from "../hooks/useCompanies";
 import type { CompanyResponse } from "../types/company.types";
-import { CompanyTable } from "./CompanyTable";
-// Uncomment as Tasks 5 and 6 are added:
-// import { CompanyFormDialog } from "./CompanyFormDialog";
-// import { DeleteCompanyDialog } from "./DeleteCompanyDialog";
+import { CompanyTable } from "../components/CompanyTable";
+import { CompanyFormDialog } from "./CompanyFormDialog";
+
 
 function useDebouncedValue<T>(value: T, delayMs = 300): T {
     const [debounced, setDebounced] = useState(value);
@@ -26,7 +25,7 @@ function useDebouncedValue<T>(value: T, delayMs = 300): T {
     return debounced;
 }
 
-export function CompaniesPage() {
+export default function CompaniesPage() {
     const [searchInput, setSearchInput] = useState("");
     const debouncedSearch = useDebouncedValue(searchInput, 300);
 
@@ -178,7 +177,17 @@ export function CompaniesPage() {
             )}
 
             {/* Task 5 & 6 Dialog Slots (isFormOpen, editingCompany, deletingCompany ready) */}
-            {isFormOpen && null}
+            {isFormOpen && (
+                <CompanyFormDialog
+                    key={editingCompany?.id ?? "create"}
+                    open={isFormOpen}
+                    company={editingCompany}
+                    onClose={() => {
+                        setIsFormOpen(false);
+                        setEditingCompany(null);
+                    }}
+                />
+            )}
             {deletingCompany && null}
         </div>
     );
