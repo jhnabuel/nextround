@@ -3,13 +3,13 @@ import AppLayout from "../components/layout/AppLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import PublicRoute from "../components/auth/PublicRoute";
-
 import DashboardPage from "../pages/DashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import ApplicationsPage from "../features/applications/pages/ApplicationsPage";
 import ProfilePage from "../pages/ProfilePage";
 import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
+import CompanyPage from "../features/companies/pages/CompaniesPage"
 
 export const router = createBrowserRouter([
     {
@@ -25,6 +25,7 @@ export const router = createBrowserRouter([
                     { path: "dashboard", element: <DashboardPage /> },
                     { path: "applications", element: <ApplicationsPage /> },
                     { path: "profile", element: <ProfilePage /> },
+                    { path: "companies", element: <CompanyPage />}
                 ],
             },
         ],
