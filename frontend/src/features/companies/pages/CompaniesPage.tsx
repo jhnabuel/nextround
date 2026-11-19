@@ -189,6 +189,7 @@ export default function CompaniesPage() {
             )}
             {deletingCompany && (
                 <DeleteCompanyDialog
+                    key={deletingCompany.id}
                     open={Boolean(deletingCompany)}
                     company={deletingCompany}
                     onClose={() => setDeletingCompany(null)}

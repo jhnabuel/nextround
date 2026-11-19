@@ -19,15 +19,18 @@ export function DeleteCompanyDialog({
     const [conflictMessage, setConflictMessage] = useState<string | null>(null);
     const isPending = deleteCompany.isPending;
 
-    useEffect(() => {
+    const handleClose = () => {
+        if (isPending) return;
         setConflictMessage(null);
-    }, [company?.id, open]);
+        onClose();
+    };
 
     useEffect(() => {
         if (!open) return;
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape" && !isPending) {
+                setConflictMessage(null);
                 onClose();
             }
         };
@@ -57,7 +60,7 @@ export function DeleteCompanyDialog({
         <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[1px]"
             onClick={() => {
-                if (!isPending) onClose();
+                if (!isPending) handleClose();
             }}
             role="dialog"
             aria-modal="true"
@@ -91,7 +94,7 @@ export function DeleteCompanyDialog({
 
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={handleClose}
                         disabled={isPending}
                         aria-label="Close dialog"
                         className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"
@@ -112,7 +115,7 @@ export function DeleteCompanyDialog({
                 <div className="mt-6 flex items-center justify-end gap-2">
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={handleClose}
                         disabled={isPending}
                         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
                     >
