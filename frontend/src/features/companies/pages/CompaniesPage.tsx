@@ -12,7 +12,7 @@ import { useCompanies } from "../hooks/useCompanies";
 import type { CompanyResponse } from "../types/company.types";
 import { CompanyTable } from "../components/CompanyTable";
 import { CompanyFormDialog } from "../components/CompanyFormDialog";
-
+import { DeleteCompanyDialog } from "../components/DeleteCompanyDialog";
 
 function useDebouncedValue<T>(value: T, delayMs = 300): T {
     const [debounced, setDebounced] = useState(value);
@@ -176,7 +176,6 @@ export default function CompaniesPage() {
                 />
             )}
 
-            {/* Task 5 & 6 Dialog Slots (isFormOpen, editingCompany, deletingCompany ready) */}
             {isFormOpen && (
                 <CompanyFormDialog
                     key={editingCompany?.id ?? "create"}
@@ -188,7 +187,13 @@ export default function CompaniesPage() {
                     }}
                 />
             )}
-            {deletingCompany && null}
+            {deletingCompany && (
+                <DeleteCompanyDialog
+                    open={Boolean(deletingCompany)}
+                    company={deletingCompany}
+                    onClose={() => setDeletingCompany(null)}
+                />
+            )}
         </div>
     );
 }
