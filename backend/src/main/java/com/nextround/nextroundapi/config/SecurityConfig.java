@@ -95,11 +95,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configurationSource = new CorsConfiguration();
 
-        List<String> trimmedOrigins = allowedOrigins.stream().map(String::trim).toList();
+        List<String> trimmedOrigins = allowedOrigins.stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
         configurationSource.setAllowedOrigins(trimmedOrigins);
         configurationSource.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configurationSource.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configurationSource.setAllowCredentials(false);
+        configurationSource.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        configurationSource.setAllowCredentials(true);
+        configurationSource.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configurationSource);
