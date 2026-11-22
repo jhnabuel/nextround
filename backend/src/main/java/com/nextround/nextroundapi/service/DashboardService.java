@@ -66,7 +66,7 @@ public class DashboardService {
         }
 
 
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now();
         LocalDate endBucket = isWeekly
                 ? today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                 : today.withDayOfMonth(1);
