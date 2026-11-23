@@ -3,7 +3,7 @@ import AppLayout from "../components/layout/AppLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import PublicRoute from "../components/auth/PublicRoute";
-import DashboardPage from "../pages/DashboardPage";
+import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import ApplicationsPage from "../features/applications/pages/ApplicationsPage";
 import ProfilePage from "../pages/ProfilePage";
