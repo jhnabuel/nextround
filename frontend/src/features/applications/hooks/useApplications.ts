@@ -3,6 +3,7 @@ import { AxiosError, isAxiosError } from "axios";
 import { toast } from "sonner";
 import { applicationService, type ApplicationQueryParams } from "../../../services/application.service";
 import { applicationKeys } from "../api/applicationKeys";
+import { dashboardKeys } from "../../dashboard/api/dashboardKeys";
 
 interface ApiErrorResponse{
     message?: string;
@@ -56,6 +57,8 @@ export function useCreateApplication(){
                 `Added application for ${newApp.jobTitle} at ${companyDisplayName}`,
                 { duration: 4000 }
             );
+
+            queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
         },
         onError: (error: AxiosError<ApiErrorResponse>) => {
             const message =
@@ -121,6 +124,7 @@ export function useUpdateApplication() {
         onSettled: (_data, _error, variables) => {
             queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
             queryClient.invalidateQueries({ queryKey: applicationKeys.detail(variables.id) });
+            queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
         },
     });
 }
@@ -160,6 +164,7 @@ export function useDeleteApplication(){
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: applicationKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
         },
     });
 }
