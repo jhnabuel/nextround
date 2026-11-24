@@ -1,5 +1,5 @@
 export interface DashboardStatsResponse{
-    totalApplication: number;
+    totalApplications: number;
     applied: number;
     interviewing: number;
     offers: number;

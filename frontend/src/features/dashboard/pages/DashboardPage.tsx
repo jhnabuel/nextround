@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, AlertCircle } from "lucide-react";
 import { DashboardStatsGrid } from "../components/DashboardStatsGrid";
 import { ApplicationActivityChart } from "../components/ApplicationActivityChart";
-import type { ActivityGranularity, ActivityPoint } from "../types/dashboard.types";
+import type { ActivityGranularity } from "../types/dashboard.types";
 import { useDashboardStats, useDashboardActivity } from "../hooks/useDashboard";
 
 export default function DashboardPage() {

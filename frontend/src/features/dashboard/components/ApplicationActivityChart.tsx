@@ -129,7 +129,7 @@ export function ApplicationActivityChart({
                                     border: "1px solid #e2e8f0",
                                     fontSize: "0.75rem",
                                 }}
-                                labelFormatter={formatTooltipLabel()}
+                                labelFormatter={formatTooltipLabel}
                                 formatter={(value) => {
                                     const count = Number(value ?? 0);
                                     return[
