@@ -69,7 +69,7 @@ public class SecurityConfig {
                         // 4. Authenticated reads/writes for applications and companies
                         .requestMatchers("/api/v1/applications/**").authenticated()
                         .requestMatchers("/api/v1/companies/**").authenticated()
-
+                        .requestMatchers("/api/v1/dashboard/**").authenticated()
                         // 5. Default-deny
                         .anyRequest().denyAll()
                 )

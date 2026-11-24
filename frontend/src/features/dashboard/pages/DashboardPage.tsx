@@ -1,58 +1,107 @@
-import { Briefcase, Send, CheckCircle2, TrendingUp } from "lucide-react";
-import { PageContainer, PageHeader } from "../../../components/layout/PageContainer";
-
-const STATS = [
-    { label: "Active Applications", value: "18", change: "+4 this week", icon: Briefcase },
-    { label: "Interviews Scheduled", value: "3", change: "Next: Tomorrow", icon: Send },
-    { label: "Offers Received", value: "1", change: "Action required", icon: CheckCircle2 },
-    { label: "Response Rate", value: "38%", change: "+5% vs last month", icon: TrendingUp },
-];
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Plus, AlertCircle } from "lucide-react";
+import { DashboardStatsGrid } from "../components/DashboardStatsGrid";
+import { ApplicationActivityChart } from "../components/ApplicationActivityChart";
+import type { ActivityGranularity } from "../types/dashboard.types";
+import { useDashboardStats, useDashboardActivity } from "../hooks/useDashboard";
 
 export default function DashboardPage() {
+    const [granularity, setGranularity] = useState<ActivityGranularity>("WEEK");
+
+    const {
+        data: stats,
+        isLoading: isStatsLoading,
+        isError: isStatsError,
+        refetch: refetchStats,
+    } = useDashboardStats();
+
+
+    const {
+        data: activityResponse,
+        isLoading: isActivityLoading, isPlaceholderData,
+        isError: isActivityError,
+        refetch: refetchActivity,
+    } = useDashboardActivity(granularity);
+
+
+    const activityData = activityResponse?.data ?? [];{};
+
+    const isZeroState =
+        !isStatsLoading && !isStatsError && stats?.totalApplications === 0;
+
     return (
-        <PageContainer className="gap-6">
-            <PageHeader
-                title="Dashboard"
-                description="High-level overview of your active job search metrics and schedule."
-            />
-
-            {/* Metric Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {STATS.map((stat) => {
-                    const Icon = stat.icon;
-                    return (
-                        <div
-                            key={stat.label}
-                            className="bg-white border border-[#E2E8F0] rounded-[10px] p-5 shadow-xs"
-                        >
-                            <div className="flex items-center justify-between text-[#64748B]">
-                <span className="text-xs font-medium uppercase tracking-wider">
-                  {stat.label}
-                </span>
-                                <div className="p-2 rounded-lg bg-[#F1F5F3] text-[#7E9181]">
-                                    <Icon className="w-4 h-4" />
-                                </div>
-                            </div>
-                            <p className="text-2xl font-bold text-[#1E293B] mt-2 leading-none">
-                                {stat.value}
-                            </p>
-                            <p className="text-xs text-[#7E9181] font-medium mt-2">
-                                {stat.change}
-                            </p>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Activity Placeholder */}
-            <div className="bg-white border border-[#E2E8F0] rounded-[10px] p-6 shadow-xs min-h-[300px] flex items-center justify-center text-center">
+        <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <p className="text-sm font-semibold text-[#1E293B]">Recent Activity</p>
-                    <p className="text-xs text-[#64748B] mt-1">
-                        Application milestones and calendar interviews will be displayed here.
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                        Dashboard
+                    </h1>
+                    <p className="text-sm text-slate-500">
+                        Track your job search pipeline and weekly application momentum.
                     </p>
                 </div>
+
+                <Link
+                    to="/applications"
+                    className="inline-flex items-center gap-2 self-start rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+                >
+                    <Plus className="h-4 w-4" />
+                    Go to Applications
+                </Link>
             </div>
-        </PageContainer>
+
+            {/* Inline Error Banner */}
+            {(isStatsError || isActivityError) && (
+                <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>Could not load dashboard metrics. Please try again.</span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (isStatsError) refetchStats();
+                            if (isActivityError) refetchActivity();
+                        }}
+                        className="rounded-md bg-white px-3 py-1 text-xs font-medium text-rose-700 shadow-sm hover:bg-rose-100"
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
+
+            {/* KPI Row */}
+            <DashboardStatsGrid stats={stats} isLoading={isStatsLoading} />
+
+            {/* Zero-State Banner OR Activity Chart */}
+            {isZeroState ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+                    <h3 className="text-base font-semibold text-slate-900">
+                        No submitted applications yet
+                    </h3>
+                    <p className="mt-1 max-w-sm text-sm text-slate-500">
+                        Move an item out of your Wishlist or log your first application to unlock
+                        activity trends.
+                    </p>
+                    <Link
+                        to="/applications"
+                        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Your First Application
+                    </Link>
+                </div>
+            ) : (
+                <ApplicationActivityChart
+                    data={activityData}
+                    granularity={granularity}
+                    onGranularityChange={setGranularity}
+                    isLoading={isActivityLoading}
+                    isPlaceholderData={isPlaceholderData}
+                />
+            )}
+        </div>
     );
 }
