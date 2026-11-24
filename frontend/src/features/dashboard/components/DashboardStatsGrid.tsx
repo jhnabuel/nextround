@@ -24,7 +24,7 @@ export function DashboardStatsGrid({ stats, isLoading }: DashboardStatsGridProps
     const cards = [
         {
             label: "Total Applications",
-            value: stats?.totalApplication ?? 0,
+            value: stats?.totalApplications ?? 0,
             icon: Briefcase,
             accent: "text-slate-700 bg-slate-100",
         },
@@ -42,13 +42,13 @@ export function DashboardStatsGrid({ stats, isLoading }: DashboardStatsGridProps
         },
         {
             label: "Offers",
-            value: stats?.interviewing ?? 0,
+            value: stats?.offers ?? 0,
             icon: Trophy,
             accent: "text-emerald-700 bg-emerald-50",
         },
         {
             label: "Rejected",
-            value: stats?.interviewing ?? 0,
+            value: stats?.rejected ?? 0,
             icon: XCircle,
             accent: "text-rose-700 bg-rose-50",
         },
