@@ -20,7 +20,7 @@ export function DashboardStatsGrid({ stats, isLoading }: DashboardStatsGridProps
         );
     }
 
-    // TODO: Map your real `stats` fields into these 5 cards (fallback to 0 if undefined)
+
     const cards = [
         {
             label: "Total Applications",
@@ -30,25 +30,25 @@ export function DashboardStatsGrid({ stats, isLoading }: DashboardStatsGridProps
         },
         {
             label: "Applied",
-            value: 0, // TODO: stats?.applied
+            value: stats?.applied ?? 0,
             icon: Send,
             accent: "text-blue-700 bg-blue-50",
         },
         {
             label: "Interviewing",
-            value: 0, // TODO: stats?.interviewing
+            value: stats?.interviewing ?? 0,
             icon: MessageSquare,
             accent: "text-amber-700 bg-amber-50",
         },
         {
             label: "Offers",
-            value: 0, // TODO: stats?.offers
+            value: stats?.interviewing ?? 0,
             icon: Trophy,
             accent: "text-emerald-700 bg-emerald-50",
         },
         {
             label: "Rejected",
-            value: 0, // TODO: stats?.rejected
+            value: stats?.interviewing ?? 0,
             icon: XCircle,
             accent: "text-rose-700 bg-rose-50",
         },
@@ -77,9 +77,9 @@ export function DashboardStatsGrid({ stats, isLoading }: DashboardStatsGridProps
 
             {/* Optional secondary counts */}
             <div className="flex items-center gap-4 text-xs text-slate-500">
-                <span>Withdrawn: {/* TODO: stats?.withdrawn ?? 0 */}0</span>
+                <span>Withdrawn: {stats?.withdrawn ?? 0}</span>
                 <span>•</span>
-                <span>Ghosted: {/* TODO: stats?.ghosted ?? 0 */}0</span>
+                <span>Ghosted: {stats?.ghosted ?? 0}</span>
             </div>
         </div>
     );

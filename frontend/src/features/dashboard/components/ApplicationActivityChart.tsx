@@ -24,10 +24,41 @@ export function ApplicationActivityChart({
                                              isLoading,
                                              isPlaceholderData = false,
                                          }: ApplicationActivityChartProps) {
-    // TODO: Format "YYYY-MM-DD" -> "Nov 16" (WEEK) and "YYYY-MM" -> "Nov '26" (MONTH)
-    // Avoid `new Date("YYYY-MM-DD")` directly so UTC offset doesn't shift the day backward
+    const parsePeriodDate = (period: string): Date => {
+        const [year, month, day = 1] = period.split("-").map(Number);
+        return new Date(year, month - 1, day);
+    };
+
     const formatTick = (period: string): string => {
-        return period;
+        const date = parsePeriodDate(period);
+        if (granularity === "WEEK") {
+            return date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+            }); // e.g., "Nov 16"
+        }
+        return date.toLocaleDateString("en-US", {
+            month: "short",
+            year: "2-digit",
+        }); // e.g., "Nov 26"
+    };
+
+    const formatTooltipLabel = (label: unknown): string => {
+        const period = String(label ?? "");
+        if (!period) return "";
+        const date = parsePeriodDate(period);
+
+        if (granularity === "WEEK") {
+            return `Week of ${date.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+            })}`;
+        }
+        return date.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+        });
     };
 
     return (
@@ -98,7 +129,14 @@ export function ApplicationActivityChart({
                                     border: "1px solid #e2e8f0",
                                     fontSize: "0.75rem",
                                 }}
-                                // TODO: Add labelFormatter and formatter for singular/plural count
+                                labelFormatter={formatTooltipLabel()}
+                                formatter={(value) => {
+                                    const count = Number(value ?? 0);
+                                    return[
+                                        `${count} ${count === 1 ? "application" : "applications"}`,
+                                        "Submitted",
+                                    ];
+                                }}
                             />
                             <Bar
                                 dataKey="count"
