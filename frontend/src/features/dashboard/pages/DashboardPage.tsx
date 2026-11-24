@@ -4,25 +4,31 @@ import { Plus, AlertCircle } from "lucide-react";
 import { DashboardStatsGrid } from "../components/DashboardStatsGrid";
 import { ApplicationActivityChart } from "../components/ApplicationActivityChart";
 import type { ActivityGranularity, ActivityPoint } from "../types/dashboard.types";
-// TODO: Import useDashboardStats and useDashboardActivity from "../hooks/useDashboard"
+import { useDashboardStats, useDashboardActivity } from "../hooks/useDashboard";
 
 export default function DashboardPage() {
     const [granularity, setGranularity] = useState<ActivityGranularity>("WEEK");
 
-    // TODO: Wire up useDashboardStats() and useDashboardActivity(granularity)
-    const stats = undefined;
-    const isStatsLoading = false;
-    const isStatsError = false;
-    const refetchStats = () => {};
+    const {
+        data: stats,
+        isLoading: isStatsLoading,
+        isError: isStatsError,
+        refetch: refetchStats,
+    } = useDashboardStats();
 
-    const activityData: ActivityPoint[] = [];
-    const isActivityLoading = false;
-    const isPlaceholderData = false;
-    const isActivityError = false;
-    const refetchActivity = () => {};
 
-    // TODO: Derive zero-state check (e.g., !isStatsLoading && !isStatsError && stats?.totalApplications === 0)
-    const isZeroState = false;
+    const {
+        data: activityResponse,
+        isLoading: isActivityLoading, isPlaceholderData,
+        isError: isActivityError,
+        refetch: refetchActivity,
+    } = useDashboardActivity(granularity);
+
+
+    const activityData = activityResponse?.data ?? [];{};
+
+    const isZeroState =
+        !isStatsLoading && !isStatsError && stats?.totalApplications === 0;
 
     return (
         <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
