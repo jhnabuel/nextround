@@ -5,6 +5,8 @@ import com.nextround.nextroundapi.BaseIntegrationTest;
 import com.nextround.nextroundapi.dtos.ChangePasswordRequest;
 import com.nextround.nextroundapi.dtos.LoginRequest;
 import com.nextround.nextroundapi.dtos.RegisterRequest;
+import com.nextround.nextroundapi.repository.CompanyRepository;
+import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
 import lombok.extern.java.Log;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,11 +25,20 @@ public class ChangePasswordIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JobApplicationRepository jobApplicationRepository;
+
+    @Autowired
+    private CompanyRepository companyRepository;
+
     private String userEmail;
     private String jwtToken;
 
     @BeforeEach
     void setUp() throws Exception {
+        jobApplicationRepository.deleteAllInBatch();
+        companyRepository.deleteAllInBatch();
+
         userRepository.deleteAllInBatch();
 
         userEmail = "candidate@nextround.dev";

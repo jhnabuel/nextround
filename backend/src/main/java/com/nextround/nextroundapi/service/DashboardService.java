@@ -43,10 +43,13 @@ public class DashboardService {
             totalApplications += row.getCount();
         }
 
+        long offers = counts.getOrDefault(ApplicationStatus.OFFER_RECEIVED, 0L) + counts.getOrDefault(ApplicationStatus.ACCEPTED, 0L);
+
+
         return new DashboardStatsResponse(totalApplications,
                 counts.getOrDefault(ApplicationStatus.APPLIED, 0L),
                 counts.getOrDefault(ApplicationStatus.INTERVIEWING, 0L),
-                counts.getOrDefault(ApplicationStatus.OFFER_RECEIVED, 0L),
+                offers,
                 counts.getOrDefault(ApplicationStatus.REJECTED, 0L),
                 counts.getOrDefault(ApplicationStatus.WITHDRAWN, 0L),
                 counts.getOrDefault(ApplicationStatus.GHOSTED, 0L));
