@@ -45,10 +45,6 @@ public class JobApplicationIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        jobApplicationRepository.deleteAllInBatch();
-        companyRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
-
         userAToken = registerAndExtractJwt("alice@nextround.dev", "Password123!", "Alice", "Guillermo");
         userBToken = registerAndExtractJwt("bob@nextround.dev", "Password123!", "Bob", "Navarro");
 

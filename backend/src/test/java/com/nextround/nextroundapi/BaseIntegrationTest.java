@@ -22,6 +22,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 @ActiveProfiles("test")
 public class BaseIntegrationTest {
 
+
     protected final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule()).disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     protected static final PostgreSQLContainer<?> postgres =
@@ -36,6 +37,13 @@ public class BaseIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    void cleanDatabase() {
+        jdbcTemplate.execute(
+                "TRUNCATE TABLE job_applications, companies, users RESTART IDENTITY CASCADE"
+        );
+    }
 
     @BeforeEach
     void ensureCaseInsensitiveIndex() {

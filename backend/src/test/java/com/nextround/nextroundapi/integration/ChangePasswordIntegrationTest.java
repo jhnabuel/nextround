@@ -36,10 +36,6 @@ public class ChangePasswordIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        jobApplicationRepository.deleteAllInBatch();
-        companyRepository.deleteAllInBatch();
-
-        userRepository.deleteAllInBatch();
 
         userEmail = "candidate@nextround.dev";
         RegisterRequest registerRequest = new RegisterRequest(

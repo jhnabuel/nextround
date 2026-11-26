@@ -42,9 +42,6 @@ public class DashboardIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        jobApplicationRepository.deleteAllInBatch();
-        companyRepository.deleteAllInBatch();
-        userRepository.deleteAllInBatch();
 
         userAToken = registerAndExtractJwt("alice@nextround.dev", "Password123!", "Alice", "Smith");
         userA = userRepository.findByEmail("alice@nextround.dev").orElseThrow();

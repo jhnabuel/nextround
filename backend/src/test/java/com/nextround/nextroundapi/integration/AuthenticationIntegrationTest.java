@@ -32,10 +32,6 @@ public class AuthenticationIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private JwtService jwtService;
 
-    @BeforeEach
-    void cleanUp(){
-        userRepository.deleteAll();
-    }
 
     @Test
     @DisplayName("POST /api/v1/auth/register -> should save user into Testcontainers PostgreSQL")
