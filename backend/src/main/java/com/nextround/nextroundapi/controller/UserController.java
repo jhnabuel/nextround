@@ -1,9 +1,6 @@
 package com.nextround.nextroundapi.controller;
 
-import com.nextround.nextroundapi.dtos.ChangePasswordRequest;
-import com.nextround.nextroundapi.dtos.JobApplicationResponse;
-import com.nextround.nextroundapi.dtos.UserRequest;
-import com.nextround.nextroundapi.dtos.UserResponse;
+import com.nextround.nextroundapi.dtos.*;
 import com.nextround.nextroundapi.service.JobApplicationService;
 import com.nextround.nextroundapi.service.UserService;
 import jakarta.validation.Valid;
@@ -46,6 +43,11 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUserProfile() {
         return ResponseEntity.ok(userService.getCurrentUserProfile());
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<UserResponse> updateCurrentUserProfile(@Valid @RequestBody UpdateProfileRequest updateProfileRequest){
+        return ResponseEntity.ok(userService.updateCurrentUserProfile(updateProfileRequest));
     }
 
     @PatchMapping("/{id}")

@@ -1,6 +1,7 @@
 package com.nextround.nextroundapi.service;
 
 import com.nextround.nextroundapi.dtos.ChangePasswordRequest;
+import com.nextround.nextroundapi.dtos.UpdateProfileRequest;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
@@ -29,6 +30,16 @@ public class UserService {
     UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    private User getAuthenticatedUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if(authentication == null || !authentication.isAuthenticated()){
+            throw new UnauthorizedException("User is not authenticated.");
+        }
+        return userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
+
     }
 
 
@@ -106,6 +117,11 @@ public class UserService {
             throw new InvalidCurrentPasswordException("Current password does not match.");
         }
 
+        // Throw error if old password gets reused as new password
+        if (passwordEncoder.matches(request.newPassword(), currentUser.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password.");
+        }
+
         // Hash and persist new password
         currentUser.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(currentUser);
@@ -122,5 +138,15 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
 
         return UserMapper.toDto(currentUser);
+    }
+
+    public UserResponse updateCurrentUserProfile(UpdateProfileRequest request){
+        User currentUser = getAuthenticatedUser();
+        currentUser.setFirstName(request.firstName().trim());
+        currentUser.setLastName(request.lastName().trim());
+
+        User updatedUser = userRepository.save(currentUser);
+
+        return UserMapper.toDto(updatedUser);
     }
 }
