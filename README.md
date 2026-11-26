@@ -1,4 +1,5 @@
 # NextRound
+![CI](https://github.com/jhnabuel/nextround/actions/workflows/ci.yml/badge.svg)
 
 A full-stack job application and interview pipeline tracker built with **Java 21, Spring Boot, React, and TypeScript**.
 
