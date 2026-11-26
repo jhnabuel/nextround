@@ -1,22 +1,24 @@
 package com.nextround.nextroundapi.service;
 
+import com.nextround.nextroundapi.dtos.UpdateProfileRequest;
 import com.nextround.nextroundapi.dtos.UserRequest;
 import com.nextround.nextroundapi.dtos.UserResponse;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.Role;
 import com.nextround.nextroundapi.exception.EmailAlreadyExistsException;
 import com.nextround.nextroundapi.exception.ResourceNotFoundException;
+import com.nextround.nextroundapi.exception.UnauthorizedException;
+import com.nextround.nextroundapi.exception.UsernameNotFoundException;
 import com.nextround.nextroundapi.repository.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -24,6 +26,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -185,6 +189,88 @@ public class UserServiceTest {
             assertThatThrownBy(() -> userService.getUserByEmail(nonExistentEmail))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining(nonExistentEmail);
+        }
+    }
+
+    @Nested
+    @DisplayName("updateUser()")
+    class UpdateCurrentUserProfileTests{
+        @AfterEach
+        void clearSecurityContext() {
+            SecurityContextHolder.clearContext();
+        }
+
+        @Test
+        @DisplayName("Should update user first name and last name")
+        void shouldUpdateUserFirstNameandLastName(){
+            // Arrange
+            User existingUser = new User("john@example.com", "encoded-password",
+                    "OldFirst",
+                    "OldLast",
+                    Role.USER);
+
+            UpdateProfileRequest updateProfileRequest = new UpdateProfileRequest("John", "Doe");
+
+            Authentication auth = mock(Authentication.class);
+            when(auth.isAuthenticated()).thenReturn(true);
+            when(auth.getName()).thenReturn("john@example.com");
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(existingUser));
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            // Act
+            UserResponse response = userService.updateCurrentUserProfile(updateProfileRequest);
+
+            // Assert
+            assertEquals("John", response.firstName());
+            assertEquals("Doe", response.lastName());
+            assertEquals("john@example.com", response.email());
+            assertEquals(Role.USER, response.role());
+
+            verify(userRepository).findByEmail("john@example.com");
+            verify(userRepository).save(existingUser);
+        }
+
+
+        @Test
+        @DisplayName("Should throw UnauthorizedException when user is not authenticated.")
+        void shouldThrowExceptionWhenUserIsNotAuthenticated(){
+            //Arrange
+            SecurityContextHolder.clearContext();
+
+            UpdateProfileRequest request = new UpdateProfileRequest("John", "Abuel");
+
+            // Act & Assert
+            assertThrows(
+                    UnauthorizedException.class,
+                    () -> userService.updateCurrentUserProfile(request)
+            );
+
+            verifyNoInteractions(userRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw UsernameNotFoundException when authenticated user does not exist")
+        void shouldThrowUsernameNotFoundWhenUserMissing() {
+            // Arrange
+            UpdateProfileRequest request = new UpdateProfileRequest("John", "Abuel");
+
+            Authentication auth = mock(Authentication.class);
+            when(auth.isAuthenticated()).thenReturn(true);
+            when(auth.getName()).thenReturn("missing@example.com");
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(
+                    UsernameNotFoundException.class,
+                    () -> userService.updateCurrentUserProfile(request)
+            );
+
+            verify(userRepository).findByEmail("missing@example.com");
+            verify(userRepository, never()).save(any(User.class));
         }
     }
 
