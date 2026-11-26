@@ -63,6 +63,12 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteCurrentUserAccount(@Valid @RequestBody DeleteAccountRequest request){
+        userService.deleteCurrentUserAccount(request);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/me/password")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         userService.changePassword(request);

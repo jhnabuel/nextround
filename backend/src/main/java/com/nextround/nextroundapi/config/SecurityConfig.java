@@ -58,10 +58,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**", "/actuator/health", "/error").permitAll()
 
                         // 1. Current user self-service: Authenticated (USER or ADMIN)
-                        .requestMatchers(
-                                "/api/v1/users/me",
-                                "/api/v1/users/me/**"
-                        ).authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me", "/api/v1/users/me/password").authenticated()
+
+                        // 2. Admin User Management: ALL other /users/** methods restricted to ADMIN
+                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
 
                         // 2. Admin User Management: ALL other /users/** methods restricted to ADMIN
                         .requestMatchers("/api/v1/users/**").hasRole("ADMIN")

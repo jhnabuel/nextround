@@ -1,12 +1,11 @@
 package com.nextround.nextroundapi.service;
 
-import com.nextround.nextroundapi.dtos.ChangePasswordRequest;
-import com.nextround.nextroundapi.dtos.UpdateProfileRequest;
-import com.nextround.nextroundapi.dtos.UserRequest;
-import com.nextround.nextroundapi.dtos.UserResponse;
+import com.nextround.nextroundapi.dtos.*;
 import com.nextround.nextroundapi.entity.User;
 import com.nextround.nextroundapi.enums.Role;
 import com.nextround.nextroundapi.exception.*;
+import com.nextround.nextroundapi.repository.CompanyRepository;
+import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,12 +23,16 @@ import java.util.stream.Collectors;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
+    private final CompanyRepository companyRepository;
+    private final JobApplicationRepository jobApplicationRepository;
     private final PasswordEncoder passwordEncoder;
     
 
-    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder){
+    UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CompanyRepository companyRepository, JobApplicationRepository jobApplicationRepository){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.companyRepository = companyRepository;
+        this.jobApplicationRepository = jobApplicationRepository;
     }
 
     private User getAuthenticatedUser(){
@@ -100,6 +103,20 @@ public class UserService {
         }
         userRepository.deleteById(id);
     }
+
+    public void deleteCurrentUserAccount(DeleteAccountRequest deleteAccountRequest){
+        User currentUser = getAuthenticatedUser();
+
+        if(!passwordEncoder.matches(deleteAccountRequest.password(), currentUser.getPassword())){
+            throw new InvalidCurrentPasswordException("Current password does not match.");
+        }
+
+        UUID userId = currentUser.getId();
+        jobApplicationRepository.deleteAllByUserId(userId);
+        companyRepository.deleteAllByUserId(userId);
+        userRepository.delete(currentUser);
+    }
+
 
     @Transactional
     public void changePassword(ChangePasswordRequest request){
