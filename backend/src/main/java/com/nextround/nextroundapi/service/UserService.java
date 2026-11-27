@@ -7,8 +7,6 @@ import com.nextround.nextroundapi.exception.*;
 import com.nextround.nextroundapi.repository.CompanyRepository;
 import com.nextround.nextroundapi.repository.JobApplicationRepository;
 import com.nextround.nextroundapi.repository.UserRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.nextround.nextroundapi.mapper.UserMapper;
@@ -35,14 +33,8 @@ public class UserService {
         this.jobApplicationRepository = jobApplicationRepository;
     }
 
-    private User getAuthenticatedUser(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if(authentication == null || !authentication.isAuthenticated()){
-            throw new UnauthorizedException("User is not authenticated.");
-        }
-        return userRepository.findByEmail(authentication.getName()).orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
-
+    private User getUserByEmailInternal(String email){
+        return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
     }
 
 
@@ -62,10 +54,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponse getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-
-        return UserMapper.toDto(user);
+        return UserMapper.toDto(getUserByEmailInternal(email));
     }
 
     public String registerUser(String rawPassword){
@@ -85,27 +74,28 @@ public class UserService {
         return UserMapper.toDto(savedUser);
     }
 
-    public UserResponse editUser(UUID id, UserRequest userRequest){
-
+    public UserResponse editUser(UUID id, UserRequest userRequest) {
         User userToBeEdited = getUserByIdInternal(id);
-        userToBeEdited.setEmail(userRequest.email());
-        userToBeEdited.setPasswordHash(userRequest.password());
-        userToBeEdited.setFirstName(userRequest.firstName());
-        userToBeEdited.setLastName(userRequest.lastName());
+        userToBeEdited.setEmail(userRequest.email().trim());
+        userToBeEdited.setPasswordHash(passwordEncoder.encode(userRequest.password()));
+        userToBeEdited.setFirstName(userRequest.firstName().trim());
+        userToBeEdited.setLastName(userRequest.lastName().trim());
 
         User updatedUser = userRepository.save(userToBeEdited);
         return UserMapper.toDto(updatedUser);
     }
 
-    public void deleteUser(UUID id){
-        if(!userRepository.existsById(id)){
+    public void deleteUser(UUID id) {
+        if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found.");
         }
+        jobApplicationRepository.deleteAllByUserId(id);
+        companyRepository.deleteAllByUserId(id);
         userRepository.deleteById(id);
     }
 
-    public void deleteCurrentUserAccount(DeleteAccountRequest deleteAccountRequest){
-        User currentUser = getAuthenticatedUser();
+    public void deleteCurrentUserAccount(String email, DeleteAccountRequest deleteAccountRequest){
+        User currentUser = getUserByEmailInternal(email);
 
         if(!passwordEncoder.matches(deleteAccountRequest.password(), currentUser.getPassword())){
             throw new InvalidCurrentPasswordException("Current password does not match.");
@@ -119,15 +109,8 @@ public class UserService {
 
 
     @Transactional
-    public void changePassword(ChangePasswordRequest request){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedException("User is not authenticated.");
-        }
-
-        User currentUser = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
+    public void changePassword(String email, ChangePasswordRequest request){
+        User currentUser = getUserByEmailInternal(email);
 
         // Verify current password; throw 400 trigger if invalid
         if (!passwordEncoder.matches(request.currentPassword(), currentUser.getPassword())) {
@@ -145,20 +128,12 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse getCurrentUserProfile() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedException("User is not authenticated.");
-        }
-
-        User currentUser = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found."));
-
-        return UserMapper.toDto(currentUser);
+    public UserResponse getCurrentUserProfile(String email) {
+        return UserMapper.toDto(getUserByEmailInternal(email));
     }
 
-    public UserResponse updateCurrentUserProfile(UpdateProfileRequest request){
-        User currentUser = getAuthenticatedUser();
+    public UserResponse updateCurrentUserProfile(String email, UpdateProfileRequest request){
+        User currentUser = getUserByEmailInternal(email);
         currentUser.setFirstName(request.firstName().trim());
         currentUser.setLastName(request.lastName().trim());
 
