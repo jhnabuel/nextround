@@ -59,10 +59,9 @@ public class SecurityConfig {
 
                         // 1. Current user self-service: Authenticated (USER or ADMIN)
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me", "/api/v1/users/me/password").authenticated()
-
-                        // 2. Admin User Management: ALL other /users/** methods restricted to ADMIN
-                        .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/me", "/api/v1/users/me/password")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me").authenticated()
 
                         // 2. Admin User Management: ALL other /users/** methods restricted to ADMIN
                         .requestMatchers("/api/v1/users/**").hasRole("ADMIN")
